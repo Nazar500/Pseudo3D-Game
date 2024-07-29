@@ -22,6 +22,7 @@ public:
 	Player(const Player& player);
 
 	double health() const;
+	ObjectType type() override;
 
 	bool reduceHealth(const double& damage, const double& angle);
 	int getKills() const;

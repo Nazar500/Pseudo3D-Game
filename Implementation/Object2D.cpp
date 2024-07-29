@@ -96,6 +96,11 @@ void Object2D::setMirror(bool value)
 
 std::vector<Point2D>& Object2D::nodes() { return p_points; }
 
+std::vector<Point2D>& Object2D::nodess()
+{
+	return p_s_points;
+}
+
 
 double Object2D::x() const { return p_pos.x; }
 double Object2D::y() const { return p_pos.y; }
@@ -161,7 +166,7 @@ bool Object2D::cross(const std::pair<Point2D, Point2D>& ray, std::pair<Point2D, 
 		Point2D texture_size = this->loadTexture().getSize();
 
 		double dist_of_point = (wall.second - point).length();
-		double dist_of_wall = (ResourceManager::checkPath(MAIN_TEXTURE) || whole_texture_overlay) ? fmod((wall.second - wall.first).length(), texture_size.x+1) : texture_size.x;
+		double dist_of_wall = (ResourceManager::checkPath(MAIN_TEXTURE) || whole_texture_overlay) ? (wall.second - wall.first).length() : texture_size.x;
 		uv = fmod(dist_of_point / dist_of_wall, 1.f);
 	}
 	return s;

@@ -57,6 +57,7 @@ public:
 	void setMirror(bool value);
 
 	std::vector<Point2D>& nodes();
+	std::vector<Point2D>& nodess();
 
 	static bool segment_crossing(const std::pair<Point2D, Point2D> seg1, const std::pair<Point2D, Point2D> seg2, Point2D& point);
 	virtual bool cross(const std::pair<Point2D, Point2D>& ray, std::pair<Point2D, Point2D>& wall, Point2D& point, double& uv);

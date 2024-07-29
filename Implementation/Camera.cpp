@@ -136,6 +136,8 @@ void Camera::endFrameProcessing()
 	oldFrame.direction = d_direction;
 	oldFrame.position = p_pos;
 
+	this->rotation(oldFrame.direction);
+
 	// check for exceptions
 
 	//if (std::fetestexcept(FE_DIVBYZERO)) { throw std::runtime_error("Error"); }
@@ -231,11 +233,8 @@ void Camera::fire()
 	if (!v_rayCast.empty()) {
 		RayCastStructure rayCast = v_rayCast[v_rayCast.size() - 1];
 		Object2D* obj = rayCast.object;
-		Player* playerObj = dynamic_cast<Player*>(obj);
+		Player* playerObj = dynamic_cast<Player*>(obj); // if(obj->type() == ObjectType::player){...}
 		if (playerObj != nullptr) {
-			//double height = (obj->height() == 0.5) ? 2. : 0.5f;
-			//obj->setHeight(height);
-
 			double damage = weapon.getDamage() / max((double)(rayCast.distance / d_depth * 15), (double)1);
 
 			
@@ -656,7 +655,7 @@ void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure k, int
 			if (texture.getTexture()->getSize() != sf::Vector2u(0, 0)) {
 				if(!k.object->isMirror()) {
 					texture.setColor(sf::Color(c, c, c)); //texture.setColor(Point4D(sf::Color(c, c, c)).avarage(pol.getFillColor()).to_col());
-					texture.setTextureRect(sf::IntRect(static_cast<int>(texture.getTexture()->getSize().x * k.progress), 0, MONITOR_TILE, (int)(texture.getTexture()->getSize().y * k.height)));
+					texture.setTextureRect(sf::IntRect(static_cast<int>(texture.getTexture()->getSize().x * k.progress), 0, MONITOR_TILE, (int)(texture.getTexture()->getSize().y * ((k.object->type() == ObjectType::player) ? 1. : k.height))));
 
 					sf::Vector2f ratio = scaling(texture.getTextureRect(), sf::Vector2u(static_cast<unsigned int>(MONITOR_TILE), static_cast<unsigned int>(height)));
 					texture.setScale(ratio);

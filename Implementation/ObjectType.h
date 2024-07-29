@@ -9,7 +9,8 @@ enum class ObjectType {
 	circle,
 	polygon,
 	line,
-	object
+	object,
+	player
 };
 
 

@@ -70,7 +70,7 @@ int main()
     bool botView = false;
 
     camera->setTextured(true);
-    camera->setCollision(false);
+    camera->setCollision(true);
     camera->set2D_map(true);
 
     double dt = 0.02;

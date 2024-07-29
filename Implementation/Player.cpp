@@ -28,6 +28,11 @@ double Player::health() const
 	return d_health;
 }
 
+ObjectType Player::type()
+{
+	return ObjectType::player;
+}
+
 bool Player::reduceHealth(const double& damage, const double& angle)
 {
 	Point2D vector = { cos(angle), sin(angle) };

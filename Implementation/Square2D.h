@@ -17,6 +17,8 @@ public:
 		p_s_points[1] = Point2D(s_size / 2., -s_size / 2.);
 		p_s_points[2] = Point2D(s_size / 2, s_size / 2.);
 		p_s_points[3] = Point2D(-s_size / 2., s_size / 2.);
+
+		p_points = p_s_points;
 	}
 };
 

@@ -190,7 +190,7 @@ protected:
 	void shift(Point2D vector);
 
 public:
-	explicit Camera(World& world, Point2D position, sf::RenderWindow& window, double vPos = 0, double height = 1.f, double health = 100., std::string texture = SKIN, double fieldOfView = FOV, double angle = FOV, double eyesHeight = 1.f, double depth = 9000, double walkSpeed = 400, double jumpSpeed = 2.75, double viewSpeed = .002, int reflection_limit = 20);
+	explicit Camera(World& world, Point2D position, sf::RenderWindow& window, double vPos = 0, double height = 0.5, double health = 100., std::string texture = SKIN, double fieldOfView = FOV, double angle = FOV, double eyesHeight = 1.f, double depth = 9000, double walkSpeed = 400, double jumpSpeed = 2.75, double viewSpeed = .002, int reflection_limit = 20);
 	//Camera(const Camera& other);
 	~Camera(); // finishing threads
 
