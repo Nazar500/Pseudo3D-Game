@@ -35,14 +35,14 @@ int main()
 
     // World Init
     World world;
-    Camera* camera = new Camera(world, { SIDE / 2, -SIDE / 2 }, window);
+    std::shared_ptr<Camera> camera(new Camera(world, { SIDE / 2, -SIDE / 2 }, window));
 
     sf::Mouse::setPosition((Point2D(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2) + Point2D(window.getPosition())).to_sfi());
     window.setMouseCursorVisible(false);
 
     // world
+    world.addObject2D(camera, "cam1");
 
-    world.addObject2D(std::make_shared<Object2D>(camera), "cam1");
     // walls
     world.addObject2D(std::make_shared<Object2D>(Object2D({ 0, 0 }, { {0, 0}, {SCALE, 0}, {SCALE, SCALE_WINDOW * SCALE}, {0, SCALE_WINDOW * SCALE} }, 1.)), "wall1");
     world.addObject2D(std::make_shared<Object2D>(Object2D({ SCALE_WINDOW * SCALE, 0 }, { {0, 0}, {SCALE, 0}, {SCALE, SCALE_WINDOW * SCALE}, {0, SCALE_WINDOW * SCALE} }, 1.)), "wall2");
@@ -143,7 +143,6 @@ int main()
     }
 
     ResourceManager::unloadAllResources();
-    delete camera;
 
     return 0;
 }

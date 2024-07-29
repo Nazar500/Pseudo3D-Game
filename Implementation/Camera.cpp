@@ -31,12 +31,12 @@ Camera::Camera(World& world, Point2D position, sf::RenderWindow& window, double 
 	}
 }
 
-//Camera::Camera(const Camera& other) : Player(other), W_world(other.W_world)
+//Camera::Camera(const Camera& other) : Player(other), W_world(other.W_world), sc(other.sc)
 //{
 //	this->b_collision = other.b_collision;
 //	this->b_hadFocus = other.b_hadFocus;
 //	this->b_mirror = other.b_mirror;
-//	this->b_textures = other.b_textures;
+//	this->b_textured = other.b_textured; this->b_2d_map = other.b_2d_map;
 //
 //	this->d_depth = other.d_depth;
 //	this->d_aspectRatio = other.d_aspectRatio;
