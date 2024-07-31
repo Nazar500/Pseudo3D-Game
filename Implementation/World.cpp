@@ -33,7 +33,9 @@ bool World::addObject2D(const std::shared_ptr<Object2D> object, const std::strin
 	if (name != "" && name != "None") {
 		return map_objects.insert({ name, object }).second;
 	}
-	return false;
+	else {
+		return map_objects.insert({ to_string(players++), object }).second;
+	}
 }
 
 std::shared_ptr<Object2D> World::findObject2D(const std::string& name)

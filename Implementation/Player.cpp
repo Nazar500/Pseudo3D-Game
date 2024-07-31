@@ -10,7 +10,7 @@ void Player::oneMoreDeath()
 	++i_deaths;
 }
 
-Player::Player(Point2D position, double height, double health, const std::string& TEXTURE) : Square2D(position, RADIUS_CAMERA, height, TEXTURE), d_health(health), d_start_health(health), start_pos(position)
+Player::Player(const Point2D& position, double height, double health, const std::string& TEXTURE) : Square2D(position, RADIUS_CAMERA, height, TEXTURE), d_health(health), d_start_health(health), start_pos(position)
 {
 }
 

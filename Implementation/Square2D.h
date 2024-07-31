@@ -12,7 +12,7 @@ private:
 	double s_size;
 
 public:
-	Square2D(Point2D pos, double size = SCALE, double h_height = 1., const std::string& texture = SKIN) : s_size(size), Object2D(pos, vector<Point2D>(4, 0), h_height, false, texture, true) {
+	Square2D(const Point2D& pos, double size = SCALE, double h_height = 1., const std::string& texture = SKIN) : s_size(size), Object2D(pos, vector<Point2D>(4, 0), h_height, false, texture, true) {
 		p_s_points[0] = Point2D(-s_size / 2., -s_size / 2.);
 		p_s_points[1] = Point2D(s_size / 2., -s_size / 2.);
 		p_s_points[2] = Point2D(s_size / 2, s_size / 2.);

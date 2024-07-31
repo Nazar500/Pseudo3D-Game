@@ -107,7 +107,9 @@ inline std::string getBaseName(const std::string& path) {
 #define BUILDED getBaseName(std::filesystem::current_path().string()) == "build"
 
 #define MAIN_TEXTURE BUILDED ? "../../../Textures/TroubleShooting/without_texture.png" : "Textures/TroubleShooting/without_texture.png"
-#define SKIN BUILDED ? "../../../Textures/Heroes/Baldi.png" : "Textures/Heroes/Baldi.png"
+#define BALDI BUILDED ? "../../../Textures/Heroes/Baldi.png" : "Textures/Heroes/Baldi.png"
+#define SKIN BUILDED ? "../../../Textures/Heroes/DoomGuy.png" : "Textures/Heroes/DoomGuy.png"
+#define SKIN1 BUILDED ? "../../../Textures/Heroes/DoomGuy(1).png" : "Textures/Heroes/DoomGuy(1).png"
 
 #define SKY_TEXTURE BUILDED ? "../../../Textures/Background/back.jpg" : "Textures/Background/back.jpg"
 #define WALL_TEXTURE BUILDED ? "../../../Textures/Walls/brickWall.png" : "Textures/Walls/brickWall.png"

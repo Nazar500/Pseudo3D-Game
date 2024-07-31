@@ -18,7 +18,7 @@ protected:
 	void oneMoreKill();
 	void oneMoreDeath();
 public:
-	explicit Player(Point2D position, double height = 1., double health = 100, const std::string& TEXTURE = SKIN);
+	explicit Player(const Point2D& position, double height = 1., double health = 100, const std::string& TEXTURE = SKIN);
 	Player(const Player& player);
 
 	double health() const;

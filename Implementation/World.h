@@ -17,6 +17,7 @@ private:
 
 	int d_length = 0;
 	int d_width = 0;
+	unsigned char players = 0;
 
 	sf::Texture T_sky_texture;
 	sf::Texture T_floor_texture;

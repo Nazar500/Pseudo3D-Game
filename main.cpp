@@ -35,13 +35,15 @@ int main()
 
     // World Init
     World world;
-    std::shared_ptr<Camera> camera(new Camera(world, { SIDE / 2, -SIDE / 2 }, window));
+    std::shared_ptr<Camera> camera(new Camera(world, { SIDE / 2, -SIDE / 2 }));
+    std::shared_ptr<Camera> test(new Camera(world, { SIDE / 3, SIDE / 4 }, 0., 0.6));
 
     sf::Mouse::setPosition((Point2D(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2) + Point2D(window.getPosition())).to_sfi());
     window.setMouseCursorVisible(false);
 
     // world
-    world.addObject2D(camera, "cam1");
+    world.addObject2D(camera, "");
+    world.addObject2D(test, "");
 
     // walls
     world.addObject2D(std::make_shared<Object2D>(Object2D({ 0, 0 }, { {0, 0}, {SCALE, 0}, {SCALE, SCALE_WINDOW * SCALE}, {0, SCALE_WINDOW * SCALE} }, 1.)), "wall1");
@@ -85,7 +87,7 @@ int main()
 
         window_position = { window.getPosition() };
         window_size = { static_cast<int>(window.getSize().x), static_cast<int>(window.getSize().y) };
-        window_rect = { window_position.x, window_position.y, window_size.x, window_size.y };
+        window_rect = { window_position.x, window_position.y+30, window_size.x, window_size.y };
 
         std::string title = "Pseudo3DEngine ";
 

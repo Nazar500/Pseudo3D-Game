@@ -10,6 +10,7 @@ Object2D::Object2D(const Object2D& object2D)
 	this->d_height = object2D.d_height;
 
 	this->T_texture = object2D.T_texture; 
+	this->T_texture1 = object2D.T_texture1; 
 	this->T_texture_path = object2D.T_texture_path;
 	this->whole_texture_overlay = object2D.whole_texture_overlay;
 	this->b_mirror = object2D.b_mirror;
@@ -20,6 +21,7 @@ Object2D::Object2D(const Object2D& object2D)
 
 Object2D::Object2D(Point2D pos, std::vector<Point2D> points, double height, bool mirror, const std::string& TEXTURE, bool all_texture) : p_points(points), p_s_points(points), p_pos(pos), d_height(height), T_texture_path(TEXTURE), whole_texture_overlay(all_texture), b_mirror(mirror) {
 	checkptr(T_texture, ResourceManager::loadTexture(TEXTURE));
+	checkptr(T_texture1, ResourceManager::loadTexture(TEXTURE));
 }
 
 
@@ -41,6 +43,16 @@ void Object2D::draw(sf::RenderTarget& window)
 const sf::Texture& Object2D::loadTexture() const
 {
 	return T_texture;
+}
+
+void Object2D::setTexture1(const std::string& TEXTURE1)
+{
+	checkptr(T_texture1, ResourceManager::loadTexture(TEXTURE1));
+}
+
+const sf::Texture& Object2D::loadTexture1() const
+{
+	return T_texture1;
 }
 
 const string Object2D::loadTexturePath() const
@@ -167,6 +179,7 @@ bool Object2D::cross(const std::pair<Point2D, Point2D>& ray, std::pair<Point2D, 
 
 		double dist_of_point = (wall.second - point).length();
 		double dist_of_wall = (ResourceManager::checkPath(MAIN_TEXTURE) || whole_texture_overlay) ? (wall.second - wall.first).length() : texture_size.x;
+
 		uv = fmod(dist_of_point / dist_of_wall, 1.f);
 	}
 	return s;

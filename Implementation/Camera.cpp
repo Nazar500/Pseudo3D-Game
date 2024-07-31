@@ -1,10 +1,11 @@
 #include "Camera.h"
 
-Camera::Camera(World& world, Point2D position, sf::RenderWindow& window, double vPos, double height, double health, std::string texture, double fieldOfView, double angle, double eyesHeight, double depth, double walkSpeed, double jumpSpeed, double viewSpeed, int reflection_limit)
-	: W_world(world), d_eyesHeight(eyesHeight), d_depth(depth), d_walkSpeed(walkSpeed), d_jumpSpeed(jumpSpeed), d_viewSpeed(viewSpeed), Player(position, height), d_direction(angle), sc(window), d_reflection_limit(reflection_limit)
+Camera::Camera(World& world, const Point2D& position, double vPos, double height, double health, const std::string& texture, const std::string& texture1, double fieldOfView, double angle, double eyesHeight, double depth, double walkSpeed, double jumpSpeed, double viewSpeed, int reflection_limit)
+	: W_world(world), d_eyesHeight(eyesHeight), d_depth(depth), d_walkSpeed(walkSpeed), d_jumpSpeed(jumpSpeed), d_viewSpeed(viewSpeed), Player(position, height), d_direction(angle), d_reflection_limit(reflection_limit)
 {
 	// angle configuration
 	setFieldOfView(fieldOfView);
+	setTexture1(texture1);
 
 	oldFrame.distances.resize(DISTANCES_SEGMENTS);
 	oldFrame.collisions.resize(COLLISION_SEGMENTS);
@@ -19,7 +20,7 @@ Camera::Camera(World& world, Point2D position, sf::RenderWindow& window, double 
 		work = 1;
 		finished = 0;
 		for (int i = 0; i < threadCount; i++) {
-			threads[i] = std::make_shared<std::thread>(&Camera::updateThread, this, i, threadCount, std::ref(window));
+			threads[i] = std::make_shared<std::thread>(&Camera::updateThread, this, i, threadCount);
 		}
 		startM.unlock();
 		startCV.notify_all();
@@ -69,7 +70,7 @@ Camera::~Camera() {
  	SetThreadAffinityMask(handle, mask);
 }
 
-void Camera::updateThread(int i, int n, sf::RenderTarget& window)
+void Camera::updateThread(int i, int n)
 {
 	int step1 = static_cast<int>(curFrame.distances.size() / n);
 	int step2 = static_cast<int>(HIDDEN_SEGMENTS / n);
@@ -221,6 +222,11 @@ void Camera::lookAt(const std::string& name)
 	Object2D* obj = W_world.findObject2D(name).get();
 	Point2D obj_middle = obj->position() + obj->loc_middle();
 	d_direction = atan2(obj_middle.y - y(), obj_middle.x - x());
+}
+
+Point2D Camera::normal() const
+{
+	return Point2D(oldFrame.direction);
 }
 
 void Camera::fire()
@@ -411,7 +417,7 @@ void Camera::updateDistances(int from, int to)
 		objectsRayCrossed(segment1, v_rayCastStructure, this, coll);
 
 		if (v_rayCastStructure.empty())
-			v_rayCastStructure.emplace_back(RayCastStructure{ d_depth, 0, nullptr, 0 });
+			v_rayCastStructure.emplace_back(RayCastStructure{ d_depth, 0, false, nullptr, 0 });
 		else if (CORRECTION) {
 			for (auto& el : v_rayCastStructure) {
 				el.distance *= cos(direction - oldFrame.direction);
@@ -442,9 +448,10 @@ void Camera::updateDistances(int from, int to)
 	}
 }
 
-void Camera::objectsRayCrossed(std::pair<Point2D, Point2D> ray, std::vector<RayCastStructure>& v_raycast, const Object2D* caster, CollisionInfo* collision, int reflections) {
+void Camera::objectsRayCrossed(std::pair<Point2D, Point2D>& ray, std::vector<RayCastStructure>& v_raycast, const Object2D* caster, CollisionInfo* collision, int reflections) {
 	std::pair<Point2D, Point2D> wall;
 	Point2D point;
+	bool Texture1 = false;
 
 	// for other info
 	Point2D ray_dir = Point2D(ray.second - ray.first).normalized();
@@ -455,7 +462,9 @@ void Camera::objectsRayCrossed(std::pair<Point2D, Point2D> ray, std::vector<RayC
 
 	for (auto& el : W_world.objects()) {
 		FlatObject* obj_2d = dynamic_cast<FlatObject*>(el.second.get());
+		Camera* obj_player = dynamic_cast<Camera*>(el.second.get());
 		Object2D* obj = el.second.get();
+
 		if (obj == caster) { continue; }
 
 		// update camera_angle if FlatObject crossed
@@ -467,15 +476,27 @@ void Camera::objectsRayCrossed(std::pair<Point2D, Point2D> ray, std::vector<RayC
 		
 		if (obj->cross(ray, wall, point, len)) {
 			dist = (point - ray.first).length();
+
+			if (obj->type() == ObjectType::player && obj_player) {
+				Point2D wall_vector = wall.second - wall.first;
+				Point2D norm_vector = Point2D(wall_vector.y, -wall_vector.x).normalized();
+
+				if (obj_player->normal().dot(norm_vector) < 0.1) {
+					Texture1 = true;
+				}
+			}
+
 			if (obj->isMirror() && reflections < d_reflection_limit) {
 				Point2D wall_vector = wall.second - wall.first;
-				double norm_vector = Point2D(wall_vector.y, -wall_vector.x).normalized().vect2Rad();
+
+				Point2D norm_vector = Point2D(wall_vector.y, -wall_vector.x).normalized();
+				double norm_angle = norm_vector.vect2Rad();
 
 				double ray_dir_p = Point2D(ray.first - point).normalize().vect2Rad();
 
-				double delta = ray_dir_p - norm_vector;
+				double delta = ray_dir_p - norm_angle;
 
-				Point2D new_ray_dir = Point2D::rad2Vect(norm_vector - delta);
+				Point2D new_ray_dir = Point2D::rad2Vect(norm_angle - delta);
 
 				pair<Point2D, Point2D> new_ray = { {point}, {point.x + d_depth * new_ray_dir.x, point.y + d_depth * new_ray_dir.y} };
 
@@ -492,8 +513,8 @@ void Camera::objectsRayCrossed(std::pair<Point2D, Point2D> ray, std::vector<RayC
 					line1[1].position = (new_ray.second / MAP_SCALE).to_sff();
 
 					unique_lock<mutex> lk(renderM);
-					sc.draw(line);
-					sc.draw(line1);
+					//sc.draw(line);
+					//sc.draw(line1);
 					lk.unlock();
 				}
 
@@ -511,7 +532,7 @@ void Camera::objectsRayCrossed(std::pair<Point2D, Point2D> ray, std::vector<RayC
 				}
 	 		}
 			
-			v_raycast.push_back({ dist, len, obj, obj->height(), v_mirrorRayCast });
+			v_raycast.push_back({ dist, len, Texture1, obj, obj->height(), v_mirrorRayCast });
 
 			if (dist <= COLLISION_AREA && b_collision && collision) {
 				collision->point = point;
@@ -649,8 +670,12 @@ void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure k, int
 
 	if (k.distance < d_depth) {
 		if (b_textured) {
-			texture.setTexture(k.object->loadTexture(), true);
-
+			if (k.backTexture) {
+				texture.setTexture(k.object->loadTexture1(), true);
+			}
+			else {
+				texture.setTexture(k.object->loadTexture(), true);
+			}
 			// transform
 			if (texture.getTexture()->getSize() != sf::Vector2u(0, 0)) {
 				if(!k.object->isMirror()) {

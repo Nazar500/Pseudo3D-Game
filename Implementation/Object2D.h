@@ -16,7 +16,7 @@ protected:
 	std::vector<Point2D> p_points;
 	Point2D p_pos;
 
-	sf::Texture T_texture;
+	sf::Texture T_texture, T_texture1;
 	string T_texture_path;
 	bool whole_texture_overlay, b_mirror;
 
@@ -28,6 +28,9 @@ public:
 
 	void draw(sf::RenderTarget& window) override;
 	const sf::Texture& loadTexture() const;
+
+	void setTexture1(const std::string& TEXTURE1);
+	const sf::Texture& loadTexture1() const;
 	const string loadTexturePath() const;
 	virtual ObjectType type();
 

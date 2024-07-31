@@ -58,9 +58,10 @@ struct Point4D {
 
 struct RayCastStructure
 {
-	RayCastStructure(double d_dist, double d_prog, Object2D* obj, double height, std::vector<RayCastStructure> v_mirrorRayCast = {}) {
+	RayCastStructure(double d_dist, double d_prog, bool back_texture, Object2D* obj, double height, std::vector<RayCastStructure> v_mirrorRayCast = {}) {
 		distance = d_dist;
 		progress = d_prog;
+		backTexture = back_texture;
 		object = obj;
 		this->height = height;
 		this->v_mirrorRayCast = v_mirrorRayCast;
@@ -68,6 +69,7 @@ struct RayCastStructure
 
 	double distance;
 	double progress;
+	bool backTexture;
 	Object2D* object;
 	double height;
 
@@ -146,10 +148,8 @@ private:
 	bool b_2d_map = true;
 
 	World& W_world;
-	sf::RenderWindow& sc;
 
 	// threads
-
 	short threadCount;
 	std::atomic<int> finished;
 	std::atomic<signed char> work;
@@ -174,12 +174,12 @@ private:
 	void rayDraw(sf::RenderTarget& window, std::vector<RayCastStructure>& v_raycast, int& shift);
 	void drawVerticalStrip(sf::RenderTarget& window, RayCastStructure k, int shift);
 
-	void updateThread(int i, int n, sf::RenderTarget& window);
+	void updateThread(int i, int n);
 	void setThreadAffinity(std::thread& thread, int core_id);
 
 	void updateHiddenDistances(int from, int to);
 	void updateDistances(int from, int to);
-	void objectsRayCrossed(std::pair<Point2D, Point2D> ray, std::vector<RayCastStructure>& v_raycast, const Object2D* caster, CollisionInfo* collision = nullptr, int reflections = 0);
+	void objectsRayCrossed(std::pair<Point2D, Point2D>& ray, std::vector<RayCastStructure>& v_raycast, const Object2D* caster, CollisionInfo* collision = nullptr, int reflections = 0);
 	void hiddenObjectsRayCrossed(pair<Point2D, Point2D>& ray, CollisionInfo& collision, const Object2D* caster);
 	void IncreaseDistance(vector<RayCastStructure>& v_RayCastStructure, double dist);
 
@@ -190,7 +190,7 @@ protected:
 	void shift(Point2D vector);
 
 public:
-	explicit Camera(World& world, Point2D position, sf::RenderWindow& window, double vPos = 0, double height = 0.5, double health = 100., std::string texture = SKIN, double fieldOfView = FOV, double angle = FOV, double eyesHeight = 1.f, double depth = 9000, double walkSpeed = 400, double jumpSpeed = 2.75, double viewSpeed = .002, int reflection_limit = 20);
+	explicit Camera(World& world, const Point2D& position, double vPos = 0, double height = 0.6, double health = 100., const std::string& texture = SKIN, const std::string& texture1 = SKIN1, double fieldOfView = FOV, double angle = FOV, double eyesHeight = 1.f, double depth = 9000, double walkSpeed = 400, double jumpSpeed = 2.75, double viewSpeed = .002, int reflection_limit = 20);
 	//Camera(const Camera& other);
 	~Camera(); // finishing threads
 
@@ -208,8 +208,8 @@ public:
 
 	void keyboardControl(double dt, sf::Vector2i position);
 	void lookAt(const std::string& name);
+	Point2D normal() const;
 	void fire();
-	
 
 	void startFrameProcessing();
 	void endFrameProcessing();
