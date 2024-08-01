@@ -36,7 +36,7 @@ int main()
     // World Init
     World world;
     std::shared_ptr<Camera> camera(new Camera(world, { SIDE / 2, -SIDE / 2 }));
-    std::shared_ptr<Camera> test(new Camera(world, { SIDE / 3, SIDE / 4 }, 0., 0.6));
+    std::shared_ptr<Camera> test(new Camera(world, { SIDE / 3, SIDE / 4 }, 0., 0.6, 5000.));
 
     sf::Mouse::setPosition((Point2D(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2) + Point2D(window.getPosition())).to_sfi());
     window.setMouseCursorVisible(false);

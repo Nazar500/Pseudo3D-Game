@@ -1,5 +1,8 @@
 #include "Point2D.h"
 
+Point2D::Point2D() {
+    this->x = 0.; this->y = 0.;
+}
 
 Point2D::Point2D(double x, double y)
 {
@@ -46,6 +49,16 @@ sf::Vector2f Point2D::to_sff() const {
 
 sf::Vector2i Point2D::to_sfi() const {
     return sf::Vector2i((int)this->x, (int)this->y);
+}
+
+bool Point2D::operator==(const Point2D& a) const
+{
+    return x == a.x && y == a.y;
+}
+
+bool Point2D::operator!=(const Point2D& a) const
+{
+    return x != a.x && y != a.y;
 }
 
 Point2D Point2D::operator+(const Point2D& a) const {

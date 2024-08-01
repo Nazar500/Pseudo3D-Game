@@ -1,12 +1,15 @@
 #include "Weapon.h"
 
-Weapon::Weapon(double damage, double reload_time, int ammo, double recoil, Point2D offset, Point2D reload_offset, Point2D flash_offset, double speed, double raise, const std::string& arm_p, const std::string& trunk_p, const std::string& flash_p) : w_damage(damage), w_reload_t(reload_time/0.4), ammo(ammo), offset(offset), w_speed(speed), w_raise(raise), w_recoil(recoil*100), r_offset(reload_offset), f_offset(flash_offset)
+Weapon::Weapon(double damage, double reload_time, int ammo, double recoil, const Point2D& offset, const Point2D& reload_offset, const Point2D& flash_offset, double speed, double raise, const string& s_reload, const string& s_shot, const std::string& arm_p, const std::string& trunk_p, const std::string& flash_p) : w_damage(damage), w_reload_t(reload_time/0.4), ammo(ammo), offset(offset), w_speed(speed), w_raise(raise), w_recoil(recoil*100), r_offset(reload_offset), f_offset(flash_offset)
 {
 
 	checkptr(arm_t, ResourceManager::loadTexture(arm_p));
 	checkptr(trunk_t, ResourceManager::loadTexture(trunk_p));
 	checkptr(flash_t, ResourceManager::loadTexture(flash_p));
 	checkptr(aim_t, ResourceManager::loadTexture(WEAPON_AIM_TEXTURE));
+
+	checkptr(reload, ResourceManager::loadSound(s_reload));
+	checkptr(shot, ResourceManager::loadSound(s_shot));
 
 	arm.setTexture(arm_t);
 	trunk.setTexture(trunk_t);
@@ -23,6 +26,9 @@ Weapon::Weapon(double damage, double reload_time, int ammo, double recoil, Point
 
 	arm.setScale(1.5, 1.5);
 	trunk.setScale(1.5, 1.5);
+
+	// sound
+
 }
 
 double Weapon::getDamage() const
@@ -45,9 +51,20 @@ double Weapon::getReloadTime() const
 	return w_reload_t;
 }
 
+bool Weapon::setReloadSound(const string& filename)
+{
+	return checkptr(reload, ResourceManager::loadSound(filename));
+}
+
+bool Weapon::setShotSound(const string& filename)
+{
+	return checkptr(shot, ResourceManager::loadSound(filename));
+}
+
 bool Weapon::shoot()
 {
 	if (!anim_recoil && !anim_reload) {
+		shot.play();
 		anim_recoil = true;
 		d_recoilTime.restart();
 		anim_flash = true;
@@ -111,6 +128,8 @@ void Weapon::draw(sf::RenderTarget& window)
 		anim_reload = true;
 		d_trunkTime.restart();
 		d_armTime.restart();
+
+		reload.play();
 
 		// debug
 		//r_time.restart();

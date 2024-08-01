@@ -11,8 +11,7 @@ void Player::oneMoreDeath()
 }
 
 Player::Player(const Point2D& position, double height, double health, const std::string& TEXTURE) : Square2D(position, RADIUS_CAMERA, height, TEXTURE), d_health(health), d_start_health(health), start_pos(position)
-{
-}
+{}
 
 Player::Player(const Player& player) : Square2D(player.position(), RADIUS_CAMERA, player.height())
 {
@@ -33,12 +32,9 @@ ObjectType Player::type()
 	return ObjectType::player;
 }
 
-bool Player::reduceHealth(const double& damage, const double& angle)
-{
-	Point2D vector = { cos(angle), sin(angle) };
-	vector *= damage;
-	
-	if (d_health - damage < 0) {
+bool Player::reduceHealth(const double& damage)
+{	
+	if (d_health - damage <= 0) {
 		d_health = d_start_health;
 		oneMoreDeath();
 
@@ -49,8 +45,6 @@ bool Player::reduceHealth(const double& damage, const double& angle)
 	else
 	{
 		d_health -= damage;
-		// move 
-		translate(vector);
 	}
 	return false;
 }

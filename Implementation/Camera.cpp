@@ -1,7 +1,7 @@
 #include "Camera.h"
 
 Camera::Camera(World& world, const Point2D& position, double vPos, double height, double health, const std::string& texture, const std::string& texture1, double fieldOfView, double angle, double eyesHeight, double depth, double walkSpeed, double jumpSpeed, double viewSpeed, int reflection_limit)
-	: W_world(world), d_eyesHeight(eyesHeight), d_depth(depth), d_walkSpeed(walkSpeed), d_jumpSpeed(jumpSpeed), d_viewSpeed(viewSpeed), Player(position, height), d_direction(angle), d_reflection_limit(reflection_limit)
+	: W_world(world), d_eyesHeight(eyesHeight), d_depth(depth), d_walkSpeed(walkSpeed), d_jumpSpeed(jumpSpeed), d_viewSpeed(viewSpeed), Player(position, height, health, texture), d_direction(angle), d_reflection_limit(reflection_limit)
 {
 	// angle configuration
 	setFieldOfView(fieldOfView);
@@ -30,6 +30,16 @@ Camera::Camera(World& world, const Point2D& position, double vPos, double height
 	if (b_2d_map) {
 		fov.setPointCount(CONVEX_NUMBER + 1);
 	}
+
+	checkptr(walkSound, ResourceManager::loadSound(WALK_SOUND));
+
+	walkSound.setLoop(true);
+	//walkSound.setVolume(70.f);
+
+	backGround.openFromFile(BACK_GROUND_SOUND);
+	backGround.setLoop(true);
+	backGround.setVolume(40.f);
+	backGround.play();
 }
 
 //Camera::Camera(const Camera& other) : Player(other), W_world(other.W_world), sc(other.sc)
@@ -182,15 +192,14 @@ void Camera::keyboardControl(double dt, sf::Vector2i position) {
 		this->d_eyesHeight *= 0.99;
 	}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)) {
-		this->d_walkSpeed = temp_walkSpeed * 2;
-	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)) 
+		this->d_walk = 2;
 	else
-		this->d_walkSpeed = temp_walkSpeed;
+		this->d_walk = 1;
 
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
 		if (weapon.shoot()) {
-			this->fire();
+			this->cameraRayCheck();
 		}
 	}
 
@@ -207,8 +216,24 @@ void Camera::keyboardControl(double dt, sf::Vector2i position) {
 	Point2D move(dx, dy);
 
 	move.normalize();
-	move *= d_walkSpeed * dt;
+	move *= d_walkSpeed * d_walk * dt;
 
+	if (move == Point2D(0, 0)) {
+		d_walk = 0;
+	}
+	if (d_walk == 2 && d_old_walk != 2) {
+		walkSound.setPitch(2.f);
+		walkSound.play();
+	}
+	else if (d_walk == 1 && d_old_walk != 1) {
+		walkSound.setPitch(1.f);
+		walkSound.play();
+	}
+	else if (d_walk == 0 && d_old_walk != 0) {
+		walkSound.stop();
+	}
+
+	d_old_walk = d_walk;
 	shift_col(move);
 
 	//lookAt("player1");
@@ -229,23 +254,33 @@ Point2D Camera::normal() const
 	return Point2D(oldFrame.direction);
 }
 
-void Camera::fire()
-{
+void Camera::cameraRayCheck() {
 	pair<Point2D, Point2D> ray = { position(), Point2D(x() + d_depth * cos(oldFrame.direction), y() + d_depth * sin(oldFrame.direction)) };
 	vector<RayCastStructure> v_rayCast;
 
 	objectsRayCrossed(ray, v_rayCast, this);
 
-	if (!v_rayCast.empty()) {
-		RayCastStructure rayCast = v_rayCast[v_rayCast.size() - 1];
-		Object2D* obj = rayCast.object;
-		Player* playerObj = dynamic_cast<Player*>(obj); // if(obj->type() == ObjectType::player){...}
-		if (playerObj != nullptr) {
-			double damage = weapon.getDamage() / max((double)(rayCast.distance / d_depth * 15), (double)1);
+	fire(v_rayCast, Point2D(ray.second - ray.first).normalized());
+}
 
-			
-			if(playerObj->reduceHealth(damage, oldFrame.direction)){
-				this->oneMoreKill();
+void Camera::fire(vector<RayCastStructure>& v_rayCast, Point2D vect)
+{
+	if (!v_rayCast.empty()) {
+		for (auto& rayCast : v_rayCast) {
+			Object2D* obj = rayCast.object;
+			Player* playerObj = dynamic_cast<Player*>(obj); // if(obj->type() == ObjectType::player){...}
+			if (playerObj) {
+				double damage = weapon.getDamage() / max((double)(rayCast.distance / d_depth * 15), (double)1);
+
+				vect *= damage;
+				playerObj->translate(vect);
+
+				if (playerObj->reduceHealth(damage)) {
+					this->oneMoreKill();
+				}
+			}
+			if (!rayCast.v_mirrorRayCast.empty()) {
+				fire(rayCast.v_mirrorRayCast, rayCast.rayDirection);
 			}
 		}
 	}
@@ -417,7 +452,7 @@ void Camera::updateDistances(int from, int to)
 		objectsRayCrossed(segment1, v_rayCastStructure, this, coll);
 
 		if (v_rayCastStructure.empty())
-			v_rayCastStructure.emplace_back(RayCastStructure{ d_depth, 0, false, nullptr, 0 });
+			v_rayCastStructure.emplace_back(RayCastStructure{ d_depth, 0, false, Point2D(), nullptr, 0});
 		else if (CORRECTION) {
 			for (auto& el : v_rayCastStructure) {
 				el.distance *= cos(direction - oldFrame.direction);
@@ -450,7 +485,7 @@ void Camera::updateDistances(int from, int to)
 
 void Camera::objectsRayCrossed(std::pair<Point2D, Point2D>& ray, std::vector<RayCastStructure>& v_raycast, const Object2D* caster, CollisionInfo* collision, int reflections) {
 	std::pair<Point2D, Point2D> wall;
-	Point2D point;
+	Point2D point, angle;
 	bool Texture1 = false;
 
 	// for other info
@@ -497,6 +532,7 @@ void Camera::objectsRayCrossed(std::pair<Point2D, Point2D>& ray, std::vector<Ray
 				double delta = ray_dir_p - norm_angle;
 
 				Point2D new_ray_dir = Point2D::rad2Vect(norm_angle - delta);
+				angle = new_ray_dir;
 
 				pair<Point2D, Point2D> new_ray = { {point}, {point.x + d_depth * new_ray_dir.x, point.y + d_depth * new_ray_dir.y} };
 
@@ -518,7 +554,6 @@ void Camera::objectsRayCrossed(std::pair<Point2D, Point2D>& ray, std::vector<Ray
 					lk.unlock();
 				}
 
-				
 				objectsRayCrossed(new_ray, v_mirrorRayCast, obj, nullptr, reflections + 1);
 				IncreaseDistance(v_mirrorRayCast, (ray.first - point).length());
 
@@ -532,7 +567,7 @@ void Camera::objectsRayCrossed(std::pair<Point2D, Point2D>& ray, std::vector<Ray
 				}
 	 		}
 			
-			v_raycast.push_back({ dist, len, Texture1, obj, obj->height(), v_mirrorRayCast });
+			v_raycast.push_back({ dist, len, Texture1, angle, obj, obj->height(), v_mirrorRayCast });
 
 			if (dist <= COLLISION_AREA && b_collision && collision) {
 				collision->point = point;

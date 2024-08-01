@@ -30,11 +30,12 @@ private:
 	// offset refering the trunk (of arm), reloading_offset ( to what position have the arm with the holder move (local coordinates system)), flash_offset (the offset points where the falsh have to be placed)
 	Point2D offset, r_offset, f_offset;
 
+	sf::Sound reload, shot;
 	sf::Texture arm_t, trunk_t, flash_t, aim_t;
 	sf::Sprite arm, trunk, flash, aim;
 
 public:
-	explicit Weapon(double damage = 150., double reload_time = 0.4f, int ammo = 10, double recoil = 1., Point2D offset = { -48, 40 }, Point2D reload_offset = { 18, 15 }, Point2D flash_offset = { 0, 0 }, double speed = 4, double raise = 20, const std::string& arm_t = WEAPON_ARM_TEXTURE, const std::string& trunk_t = WEAPON_TRUNK_TEXTURE, const std::string& flash_t = WEAPON_FLASH_TEXTURE);
+	explicit Weapon(double damage = 100., double reload_time = 0.4f, int ammo = 10, double recoil = 1., const Point2D& offset = { -48, 40 }, const Point2D& reload_offset = { 18, 15 }, const Point2D& flash_offset = { 0, 0 }, double speed = 4, double raise = 20, const string& s_reload = SHOTGUN_RELOAD, const string& s_shot = SHOTGUN_SHOT, const std::string& arm_t = WEAPON_ARM_TEXTURE, const std::string& trunk_t = WEAPON_TRUNK_TEXTURE, const std::string& flash_t = WEAPON_FLASH_TEXTURE);
 
 	double getDamage() const;
 	void setDamage(double damage);
@@ -42,6 +43,9 @@ public:
 	// in seconds
 	void setReloadTime(double time);
 	double getReloadTime() const;
+
+	bool setReloadSound(const string& filename);
+	bool setShotSound(const string& filename);
 
 	bool shoot();
 	void draw(sf::RenderTarget& window) override;

@@ -13,7 +13,7 @@ public:
 	double x;
 	double y;
 
-	Point2D() = default;
+	Point2D();
 	Point2D(double x, double y);
 	Point2D(double angle);
 	Point2D(sf::Vector2f p);
@@ -25,6 +25,9 @@ public:
 
 	sf::Vector2f to_sff() const;
 	sf::Vector2i to_sfi() const;
+
+	bool operator==(const Point2D& a) const;
+	bool operator!=(const Point2D& a) const;
 
 	Point2D operator+(const Point2D& a) const;
 	Point2D operator+(double num) const;

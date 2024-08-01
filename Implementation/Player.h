@@ -24,7 +24,7 @@ public:
 	double health() const;
 	ObjectType type() override;
 
-	bool reduceHealth(const double& damage, const double& angle);
+	bool reduceHealth(const double& damage);
 	int getKills() const;
 	int getDeaths() const;
 };

@@ -58,11 +58,13 @@ struct Point4D {
 
 struct RayCastStructure
 {
-	RayCastStructure(double d_dist, double d_prog, bool back_texture, Object2D* obj, double height, std::vector<RayCastStructure> v_mirrorRayCast = {}) {
+	RayCastStructure(double d_dist, double d_prog, bool back_texture, Point2D v_angle, Object2D* obj, double height, std::vector<RayCastStructure> v_mirrorRayCast = {}) {
 		distance = d_dist;
 		progress = d_prog;
 		backTexture = back_texture;
 		object = obj;
+		rayDirection = v_angle;
+
 		this->height = height;
 		this->v_mirrorRayCast = v_mirrorRayCast;
 	}
@@ -70,6 +72,7 @@ struct RayCastStructure
 	double distance;
 	double progress;
 	bool backTexture;
+	Point2D rayDirection;
 	Object2D* object;
 	double height;
 
@@ -120,8 +123,13 @@ private:
 
 	// accesories
 	Weapon weapon;
-	// for static collision when the object move and you aren't moving
-	Point2D collision_vector;
+
+	// sounds
+	sf::Sound walkSound;
+	sf::Music backGround;
+
+	//// for static collision when the object move and you aren't moving
+	//Point2D collision_vector;
 
 	double d_direction;
 	double d_fieldOfView;
@@ -133,7 +141,7 @@ private:
 	double d_jumpSpeed;
 
 	double d_walkSpeed;
-	double temp_walkSpeed = d_walkSpeed;
+	unsigned char d_walk = 0, d_old_walk = d_walk;
 
 	double d_viewSpeed;
 
@@ -209,7 +217,8 @@ public:
 	void keyboardControl(double dt, sf::Vector2i position);
 	void lookAt(const std::string& name);
 	Point2D normal() const;
-	void fire();
+	void fire(vector<RayCastStructure>& v_rayCast, Point2D vect);
+	void cameraRayCheck();
 
 	void startFrameProcessing();
 	void endFrameProcessing();

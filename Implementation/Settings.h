@@ -6,6 +6,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
+#include <SFML/Audio.hpp>
 
 #include <iostream>
 #include <string>
@@ -122,43 +123,61 @@ inline std::string getBaseName(const std::string& path) {
 #define WEAPON_FLASH_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/Flash.png" : "Textures/Weapons/Shotgun/Flash.png"
 #define WEAPON_AIM_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/aim.png" : "Textures/Weapons/Shotgun/aim.png"
 
-inline void checkptr(sf::Texture& obj, sf::Texture* ptr) {
+#define WALK_SOUND BUILDED ? "../../../Sounds/Walking_sounds.wav" : "Sounds/Walking_sounds.wav"
+#define BACK_GROUND_SOUND BUILDED ? "../../../Sounds/Nature_sounds.wav" : "Sounds/Nature_sounds.wav"
+#define SHOTGUN_SHOT BUILDED ? "../../../Sounds/Shotgun_shot.wav" : "Sounds/Shotgun_shot.wav"
+#define SHOTGUN_RELOAD BUILDED ? "../../../Sounds/Shotgun_reload.wav" : "Sounds/Shotgun_reload.wav"
+
+inline bool checkptr(sf::Texture& obj, sf::Texture* ptr) {
 	if (ptr != nullptr) {
 		obj = *ptr;
+		return true;
+	}
+	
+	const std::string path = BUILDED ? "../../../Textures/TroubleShooting/without_texture.png" : "Textures/TroubleShooting/without_texture.png";
+	if (!std::filesystem::exists(path)) {
+		sf::RenderTexture surface;
+		unsigned int width = 800, height = 600;
+		surface.create(width, height);
+
+		sf::Font font;
+		if (!font.loadFromFile("C:/Windows/Fonts/arialbd.ttf")) {
+			std::cerr << "Error with loading a font!!!" << std::endl;
+		}
+
+		sf::Text text("Without Texture", font, 100);
+		text.setFillColor(sf::Color(255, 0, 0, 255));
+		sf::FloatRect text_bounds = text.getLocalBounds();
+		text.setPosition(sf::Vector2f((width - text_bounds.width) / 2.f, height / 2.f - text.getCharacterSize() / 2.f));
+
+		surface.clear(sf::Color(200, 200, 200));
+		surface.draw(text);
+		surface.display();
+
+		sf::Texture rendered_texture = surface.getTexture();
+		sf::Image rendered_image = rendered_texture.copyToImage();
+		rendered_image.saveToFile(path);
+
+		obj = rendered_texture;
 	}
 	else {
-		const std::string path = BUILDED ? "../../../Textures/TroubleShooting/without_texture.png" : "Textures/TroubleShooting/without_texture.png";
-		if (!std::filesystem::exists(path)) {
-			sf::RenderTexture surface;
-			unsigned int width = 800, height = 600;
-			surface.create(width, height);
-
-			sf::Font font;
-			if (!font.loadFromFile("C:/Windows/Fonts/arialbd.ttf")) {
-				std::cerr << "Error with loading a font!!!" << std::endl;
-			}
-
-			sf::Text text("Without Texture", font, 100);
-			text.setFillColor(sf::Color(255, 0, 0, 255));
-			sf::FloatRect text_bounds = text.getLocalBounds();
-			text.setPosition(sf::Vector2f((width - text_bounds.width) / 2.f, height / 2.f - text.getCharacterSize() / 2.f));
-
-			surface.clear(sf::Color(200, 200, 200));
-			surface.draw(text);
-			surface.display();
-
-			sf::Texture rendered_texture = surface.getTexture();
-			sf::Image rendered_image = rendered_texture.copyToImage();
-			rendered_image.saveToFile(path);
-
-			obj = rendered_texture;
-		}
-		else {
-			sf::Texture texture;
-			texture.loadFromFile(path);
-			obj = texture;
-		}
+		sf::Texture texture;
+		texture.loadFromFile(path);
+		obj = texture;
 	}
+	
+	return false;
+}
+
+inline bool checkptr(sf::Sound& obj, sf::SoundBuffer* ptr) {
+	if (ptr) {
+		obj.setBuffer(*ptr);
+
+		return true;
+	}
+	
+	obj.setBuffer(sf::SoundBuffer());
+	return false;
 }
 
 #endif //PSEUDO3DENGINE_SETTINGS_H
