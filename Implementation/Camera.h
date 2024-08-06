@@ -7,6 +7,8 @@
 #include "Point2D.h"
 #include "ObjectType.h"
 #include "Object2D.h"
+#include "ClientUdp.h"
+#include "ServerUdp.h"
 #include "FlatObject.h"
 #include "World.h"
 #include "Player.h"
@@ -113,9 +115,9 @@ private:
 
 	double directionSin = 0;
 	double directionCos = 0;
-	double horizontalCos[DISTANCES_SEGMENTS];
+	/*double horizontalCos[DISTANCES_SEGMENTS];
 	double horizontalSin[DISTANCES_SEGMENTS];
-	double verticalTan[SCREEN_HEIGHT];
+	double verticalTan[SCREEN_HEIGHT];*/
 
 	FrameImportantInfo oldFrame, curFrame;
 

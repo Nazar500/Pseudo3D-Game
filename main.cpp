@@ -80,6 +80,9 @@ int main()
 
     sf::Clock dt_clock;
 
+    // tests
+    ClientUdp a(world);
+
     // Game loop
     while (window.isOpen())
     {
@@ -109,12 +112,20 @@ int main()
                 switch (event.key.code)
                 {
                 case sf::Keyboard::Key::Escape:
-                    if (window_rect.contains(sf::Mouse::getPosition())) {
+                    if (sf::VideoMode(window.getSize().x, window.getSize().y) == sf::VideoMode::getDesktopMode()) {
+                        window.setSize({ SCREEN_WIDTH, SCREEN_HEIGHT });
+                    }
+                    else if (window_rect.contains(sf::Mouse::getPosition())) {
                         sf::Mouse::setPosition(sf::Vector2i(0, 0));
                     }
                     else {
                         window.close();
                     }
+                    break;
+
+                case sf::Keyboard::Key::F12:
+                    sf::VideoMode vid = sf::VideoMode::getDesktopMode();
+                    window.setSize({ vid.width, vid.height });
                     break;
                 }
             }

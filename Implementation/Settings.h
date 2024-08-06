@@ -128,6 +128,8 @@ inline std::string getBaseName(const std::string& path) {
 #define SHOTGUN_SHOT BUILDED ? "../../../Sounds/Shotgun_shot.wav" : "Sounds/Shotgun_shot.wav"
 #define SHOTGUN_RELOAD BUILDED ? "../../../Sounds/Shotgun_reload.wav" : "Sounds/Shotgun_reload.wav"
 
+#define CONNECT_FILE  BUILDED ? "../../../Connect.txt" : "Connect.txt"
+
 inline bool checkptr(sf::Texture& obj, sf::Texture* ptr) {
 	if (ptr != nullptr) {
 		obj = *ptr;

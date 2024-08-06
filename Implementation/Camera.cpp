@@ -270,7 +270,7 @@ void Camera::fire(vector<RayCastStructure>& v_rayCast, Point2D vect)
 			Object2D* obj = rayCast.object;
 			Player* playerObj = dynamic_cast<Player*>(obj); // if(obj->type() == ObjectType::player){...}
 			if (playerObj) {
-				double damage = weapon.getDamage() / max((double)(rayCast.distance / d_depth * 15), (double)1);
+				double damage = weapon.getDamage() / max((double)(rayCast.distance / d_depth * 30), (double)1);
 
 				vect *= damage;
 				playerObj->translate(vect);
@@ -324,7 +324,7 @@ void Camera::setFieldOfView(double angle)
 	else
 		d_fieldOfView = angle;
 
-	for (int i = 0; i < DISTANCES_SEGMENTS; i++)
+	/*for (int i = 0; i < DISTANCES_SEGMENTS; i++)
 	{
 		double halfWidth = tan(d_fieldOfView / 2) * ((double)SCREEN_WIDTH / SCREEN_HEIGHT);
 		double offset = ((i * 2.0 / (DISTANCES_SEGMENTS - 1.0)) - 1.0) * halfWidth;
@@ -341,7 +341,7 @@ void Camera::setFieldOfView(double angle)
 		Point2D dir = { 1, 1 * offset };
 		dir.normalize();
 		verticalTan[i] = tan(atan2(dir.y, dir.x));
-	}
+	}*/
 }
 
 void Camera::shift_col(Point2D vector)
