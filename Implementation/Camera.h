@@ -204,6 +204,9 @@ public:
 	//Camera(const Camera& other);
 	~Camera(); // finishing threads
 
+	void SoundsPause();
+	void SoundsResume();
+
 	void setTextured(bool active);
 	bool getTextured();
 

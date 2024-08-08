@@ -7,6 +7,8 @@ file(GLOB_RECURSE FILES "Implementation/*.cpp" "Implementation/*.h")
 
 add_executable(Pseudo3DGame ${FILES} main.cpp)
 
+#set_target_properties(Pseudo3DGame PROPERTIES WIN32_EXECUTABLE TRUE)
+
 if(APPLE OR UNIX)
     SET(PLATFORM_SPECIFIC_LIBS "-lpthread")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pthread")

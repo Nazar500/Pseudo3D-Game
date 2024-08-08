@@ -6,11 +6,13 @@
 #include "Implementation/Camera.h"
 #include "Implementation/Object2D.h"
 #include "Implementation/FlatObject.h"
+#include "Implementation/Menu.h"
 
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include <windows.h>
 
 using namespace std;
 
@@ -22,16 +24,27 @@ string format_value(const double& value, const char& fill, const size_t& precisi
 
 int main()
 {
+    HWND hWnd = GetConsoleWindow();
+    #ifdef _DEBUG
+        ShowWindow(hWnd, 1);
+    #else
+        ShowWindow(hWnd, 0);
+    #endif
+
     srand((unsigned int)time(0));
 
     // Window should be created first because of drawing context.
+    Font font;
+    font.loadFromFile("C:/Windows/Fonts/CascadiaMono.ttf");
 
-    sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Pseudo3DEngine");
+    Text::Style text_style = Text::Style::Bold;
+
+    sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Pseudo3DEngine", (VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT) == VideoMode::getDesktopMode()) ? Style::Fullscreen : Style::Default);
     sf::Vector2i window_position;
     sf::Vector2i window_size;
     sf::Rect<int> window_rect;
 
-    //window.setFramerateLimit(100);
+    window.setFramerateLimit(FPS);
 
     // World Init
     World world;
@@ -39,7 +52,7 @@ int main()
     std::shared_ptr<Camera> test(new Camera(world, { SIDE / 3, SIDE / 4 }, 0., 0.6, 5000.));
 
     sf::Mouse::setPosition((Point2D(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2) + Point2D(window.getPosition())).to_sfi());
-    window.setMouseCursorVisible(false);
+    window.setMouseCursorVisible(true);
 
     // world
     world.addObject2D(camera, "");
@@ -80,8 +93,9 @@ int main()
 
     sf::Clock dt_clock;
 
-    // tests
-    ClientUdp a(world);
+    Menu menu(font, text_style, 50);
+    ClientUdp client(world);
+    //ServerUdp server(world);
 
     // Game loop
     while (window.isOpen())
@@ -112,15 +126,10 @@ int main()
                 switch (event.key.code)
                 {
                 case sf::Keyboard::Key::Escape:
-                    if (sf::VideoMode(window.getSize().x, window.getSize().y) == sf::VideoMode::getDesktopMode()) {
-                        window.setSize({ SCREEN_WIDTH, SCREEN_HEIGHT });
-                    }
-                    else if (window_rect.contains(sf::Mouse::getPosition())) {
-                        sf::Mouse::setPosition(sf::Vector2i(0, 0));
-                    }
-                    else {
-                        window.close();
-                    }
+                    window.setMouseCursorVisible(true);
+                    camera->SoundsPause();
+
+                    menu.to_main();
                     break;
 
                 case sf::Keyboard::Key::F12:
@@ -131,27 +140,37 @@ int main()
             }
         }
 
+        if (!menu.getState()) {
+            window.close();
+        }
+
         // Actually game
         window.clear(sf::Color::White);
-        if (MIRROR_DEBUG) {
-            world.draw(window);
-            camera->draw_map(window);
-            camera->startFrameProcessing();
-            //camera->drawCameraView(window);
-            camera->endFrameProcessing();
+        if (menu.getState() == Tabs::Play) {
+            window.setMouseCursorVisible(false);
+            camera->SoundsResume();
+            if (MIRROR_DEBUG) {
+                world.draw(window);
+                camera->draw_map(window);
+                camera->startFrameProcessing();
+                //camera->drawCameraView(window);
+                camera->endFrameProcessing();
+            }
+            else {
+                camera->startFrameProcessing();
+                camera->drawCameraView(window);
+                camera->endFrameProcessing();
+
+                world.draw(window);
+                camera->draw_map(window);
+            }
         }
         else {
-            camera->startFrameProcessing();
-            camera->drawCameraView(window);
-            camera->endFrameProcessing();
-            
-            world.draw(window);
-            camera->draw_map(window);
+            menu.update(window, Mouse::getPosition(window));
         }
         window.display();
 
-        // if escape was pressed
-        if (window.hasFocus() && window_rect.contains(sf::Mouse::getPosition()))
+        if (window.hasFocus() && window_rect.contains(sf::Mouse::getPosition()) && menu.getState() == Tabs::Play)
             camera->keyboardControl(d_elapsedTime, window.getPosition());
     }
 

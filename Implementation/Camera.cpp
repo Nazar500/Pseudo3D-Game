@@ -39,7 +39,7 @@ Camera::Camera(World& world, const Point2D& position, double vPos, double height
 	backGround.openFromFile(BACK_GROUND_SOUND);
 	backGround.setLoop(true);
 	backGround.setVolume(40.f);
-	backGround.play();
+	//backGround.play();
 }
 
 //Camera::Camera(const Camera& other) : Player(other), W_world(other.W_world), sc(other.sc)
@@ -72,6 +72,21 @@ Camera::~Camera() {
 	for (auto t : threads)
 		if (t->joinable())
 			t->join();
+}
+
+void Camera::SoundsPause()
+{
+	if (backGround.getStatus() != Music::Status::Paused) {
+		walkSound.pause();
+		backGround.pause();
+	}
+}
+
+void Camera::SoundsResume()
+{
+	if (backGround.getStatus() != Music::Status::Playing) {
+		backGround.play();
+	}
 }
 
  void Camera::setThreadAffinity(std::thread& thread, int core_id) {

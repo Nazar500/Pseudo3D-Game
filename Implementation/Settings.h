@@ -78,7 +78,7 @@
 #define DISTANCES_SEGMENTS 1280 // How much vertical sectors we use in ray cast
 #define FLOOR_SEGMENT_SIZE 8
 
-#define FPS 100
+#define FPS 60
 #define MONITOR_TILE (SCREEN_WIDTH / DISTANCES_SEGMENTS)
 #define DIST /*(FOV < PI-0.1) ?*/ DISTANCES_SEGMENTS / (tan(FOV / 2) * 2) * 13 * FOV / (PI / 2) * 1280 / DISTANCES_SEGMENTS// : DISTANCES_SEGMENTS * 3
 
