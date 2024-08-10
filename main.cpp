@@ -87,6 +87,7 @@ int main()
     camera->setTextured(true);
     camera->setCollision(true);
     camera->set2D_map(true);
+    camera->SoundsPause();
 
     double dt = 0.02;
     int iterations = 0;
@@ -158,7 +159,7 @@ int main()
             }
             else {
                 camera->startFrameProcessing();
-                camera->drawCameraView(window);
+                camera->drawCameraView(window, d_elapsedTime * 1000);
                 camera->endFrameProcessing();
 
                 world.draw(window);
@@ -171,7 +172,7 @@ int main()
         window.display();
 
         if (window.hasFocus() && window_rect.contains(sf::Mouse::getPosition()) && menu.getState() == Tabs::Play)
-            camera->keyboardControl(d_elapsedTime, window.getPosition());
+            camera->keyboardControl(d_elapsedTime, window.getPosition(), window);
     }
 
     ResourceManager::unloadAllResources();

@@ -125,26 +125,30 @@ void Menu::draw_settings(RenderTarget& sc) const
 
 void Menu::draw_about(RenderTarget& sc) const
 {
-	int text_size = size;
-	std::string text("What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.");
+	int text_size = size / 2;
+	/*std::string text("What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.");
 	
 	int x = 20, width = (int)Text(text, f, text_size).getGlobalBounds().width;
 	int line_len = SCREEN_WIDTH - x * 2;
 	int temp_lines = width / line_len;
-	int temp_len = line_len / (width / (int)text.length()) - 2;
+	int temp_len = line_len / (width / (int)text.length()) - 2;*/
 
-	std::cout << temp_len << " " << temp_lines << " " << line_len << std::endl;
+	//std::cout << temp_len << " " << temp_lines << " " << line_len << std::endl;
 
-	for (int i = 0; i < temp_lines; i++) {
-		Text temp(text.substr(temp_len * i, temp_len), f, text_size);
-		temp.setStyle(style);
+	
+	Text temp("Pseudo-3D Game", f, text_size * 2), temp1("A Simple Ray-Cast Algorithm can build Pseudo-3D Image!", f, text_size), temp2("This is an implementation of Pseudo-3D Game Engine", f, text_size), temp3("Enjoy!!!", f, text_size); // Text temp(text.substr(temp_len * i, temp_len), f, text_size);
+	temp.setStyle(style), temp1.setStyle(style), temp2.setStyle(style), temp3.setStyle(style);
+	temp.setFillColor({ 0, 0, 0 }), temp1.setFillColor({ 0, 0, 0 }), temp2.setFillColor({ 0, 0, 0 }), temp3.setFillColor({ 0, 0, 0 });
 
-		temp.setFillColor({ 0, 0, 0 });
+	temp.setPosition((float)(int)((SCREEN_WIDTH - temp.getGlobalBounds().width) / 2.f), 0 * (float)text_size + 20);
+	temp1.setPosition((float)(int)((SCREEN_WIDTH - temp1.getGlobalBounds().width) / 2.f), 1 * (float)text_size + 20);
+	temp2.setPosition((float)(int)((SCREEN_WIDTH - temp2.getGlobalBounds().width) / 2.f), 2 * (float)text_size + 20);
+	temp3.setPosition((float)(int)((SCREEN_WIDTH - temp3.getGlobalBounds().width) / 2.f), 3 * (float)text_size + 20);
 
-		temp.setPosition((float)x, i * (float)text_size + 20);
-
-		sc.draw(temp);
-	}
+	sc.draw(temp);
+	sc.draw(temp1);
+	sc.draw(temp2);
+	sc.draw(temp3);
 }
 
 Tabs Menu::getState() const 

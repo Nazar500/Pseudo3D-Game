@@ -54,7 +54,7 @@
 #define RED_COLOR {255, 0, 0}
 
 #define FOV PI / 2
-#define CORRECTION false
+#define CORRECTION 0
 
 // FOR COLLISION DETECTION
 #define COLLISION_DISTANCE 80
@@ -80,7 +80,7 @@
 
 #define FPS 60
 #define MONITOR_TILE (SCREEN_WIDTH / DISTANCES_SEGMENTS)
-#define DIST /*(FOV < PI-0.1) ?*/ DISTANCES_SEGMENTS / (tan(FOV / 2) * 2) * 13 * FOV / (PI / 2) * 1280 / DISTANCES_SEGMENTS// : DISTANCES_SEGMENTS * 3
+#define DIST /*(FOV < PI-0.1) ? */DISTANCES_SEGMENTS / (tan(FOV / 2) * 2) * 13 * FOV / (PI / 2) * 1280 / DISTANCES_SEGMENTS/* : DISTANCES_SEGMENTS * 3*/
 
 #define OUTLINE_SEGMENTS false
 #define OUTLINE_SEGMENTS_COLOR { 0, 0, 0, 255 }
@@ -112,17 +112,20 @@ inline std::string getBaseName(const std::string& path) {
 #define SKIN BUILDED ? "../../../Textures/Heroes/DoomGuy.png" : "Textures/Heroes/DoomGuy.png"
 #define SKIN1 BUILDED ? "../../../Textures/Heroes/DoomGuy(1).png" : "Textures/Heroes/DoomGuy(1).png"
 
-#define SKY_TEXTURE BUILDED ? "../../../Textures/Background/back.jpg" : "Textures/Background/back.jpg"
+#define SKY_TEXTURE BUILDED ? "../../../Textures/Backgrounds/back.jpg" : "Textures/Backgrounds/back.jpg"
 #define WALL_TEXTURE BUILDED ? "../../../Textures/Walls/brickWall.png" : "Textures/Walls/brickWall.png"
 #define WALL_TEXTURE1 BUILDED ? "../../../Textures/Walls/wall_12.jpg" : "Textures/Walls/wall_12.jpg"
 #define WALL_TEXTURE2 BUILDED ? "../../../Textures/Walls/minecraft.jpg" : "Textures/Walls/minecraft.jpg"
 #define COLUMN_TEXTURE BUILDED ? "../../../Textures/Walls/column1.jpg" : "Textures/Walls/column1.jpg"
+
+#define WIND_TEXTURE BUILDED ? "../../../Textures/BackGrounds/wind.png" : "Textures/BackGrounds/wind.png"
 
 #define WEAPON_ARM_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/Arm.png" : "Textures/Weapons/Shotgun/Arm.png"
 #define WEAPON_TRUNK_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/Trunk.png" : "Textures/Weapons/Shotgun/Trunk.png"
 #define WEAPON_FLASH_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/Flash.png" : "Textures/Weapons/Shotgun/Flash.png"
 #define WEAPON_AIM_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/aim.png" : "Textures/Weapons/Shotgun/aim.png"
 
+#define MENU_MUSIC BUILDED ? "../../../Sounds/UnrealSuperHero3.ogg" : "Sounds/UnrealSuperHero3.ogg"
 #define WALK_SOUND BUILDED ? "../../../Sounds/Walking_sounds.wav" : "Sounds/Walking_sounds.wav"
 #define BACK_GROUND_SOUND BUILDED ? "../../../Sounds/Nature_sounds.wav" : "Sounds/Nature_sounds.wav"
 #define SHOTGUN_SHOT BUILDED ? "../../../Sounds/Shotgun_shot.wav" : "Sounds/Shotgun_shot.wav"

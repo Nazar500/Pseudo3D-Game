@@ -125,10 +125,13 @@ private:
 
 	// accesories
 	Weapon weapon;
+	unsigned char wind_index = 0;
+	short wind_speed = 50; // milliseconds
+	int wind_count = 0;
 
 	// sounds
 	sf::Sound walkSound;
-	sf::Music backGround;
+	sf::Music backGround, menuMusic;
 
 	//// for static collision when the object move and you aren't moving
 	//Point2D collision_vector;
@@ -183,6 +186,7 @@ private:
 
 	void rayDraw(sf::RenderTarget& window, std::vector<RayCastStructure>& v_raycast, int& shift);
 	void drawVerticalStrip(sf::RenderTarget& window, RayCastStructure k, int shift);
+	void drawRunningWind(RenderTarget& window, int dt);
 
 	void updateThread(int i, int n);
 	void setThreadAffinity(std::thread& thread, int core_id);
@@ -219,7 +223,7 @@ public:
 	static sf::Vector2f scaling(const sf::Vector2u& size_before, const sf::Vector2u& size_after);
 	sf::Vector2f scaling(const sf::IntRect& size_before, const sf::Vector2u& size_after);
 
-	void keyboardControl(double dt, sf::Vector2i position);
+	void keyboardControl(double dt, sf::Vector2i position, RenderTarget& window);
 	void lookAt(const std::string& name);
 	Point2D normal() const;
 	void fire(vector<RayCastStructure>& v_rayCast, Point2D vect);
@@ -229,7 +233,7 @@ public:
 	void endFrameProcessing();
 	
 	void draw_map(sf::RenderTarget& window);
-	void drawCameraView(sf::RenderTarget& window);
+	void drawCameraView(sf::RenderTarget& window, int dt);
 };
 
 

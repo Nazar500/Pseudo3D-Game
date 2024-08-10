@@ -36,6 +36,11 @@ Camera::Camera(World& world, const Point2D& position, double vPos, double height
 	walkSound.setLoop(true);
 	//walkSound.setVolume(70.f);
 
+	menuMusic.openFromFile(MENU_MUSIC);
+	menuMusic.setLoop(true);
+	menuMusic.setVolume(20.f);
+	//menuMusic.play();
+
 	backGround.openFromFile(BACK_GROUND_SOUND);
 	backGround.setLoop(true);
 	backGround.setVolume(40.f);
@@ -80,12 +85,18 @@ void Camera::SoundsPause()
 		walkSound.pause();
 		backGround.pause();
 	}
+	if (menuMusic.getStatus() != Music::Status::Playing) {
+		menuMusic.play();
+	}
 }
 
 void Camera::SoundsResume()
 {
 	if (backGround.getStatus() != Music::Status::Playing) {
 		backGround.play();
+	}
+	if (menuMusic.getStatus() != Music::Status::Paused) {
+		menuMusic.pause();
 	}
 }
 
@@ -169,7 +180,7 @@ void Camera::endFrameProcessing()
 	//if (std::fetestexcept(FE_DIVBYZERO)) { throw std::runtime_error("Error"); }
 }
 
-void Camera::keyboardControl(double dt, sf::Vector2i position) {
+void Camera::keyboardControl(double dt, sf::Vector2i position, RenderTarget& window) {
 	double sina = static_cast<double>(sin(this->d_direction));
 	double cosa = static_cast<double>(cos(this->d_direction));
 
@@ -207,8 +218,9 @@ void Camera::keyboardControl(double dt, sf::Vector2i position) {
 		this->d_eyesHeight *= 0.99;
 	}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)) 
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)) {
 		this->d_walk = 2;
+	}
 	else
 		this->d_walk = 1;
 
@@ -468,9 +480,14 @@ void Camera::updateDistances(int from, int to)
 
 		if (v_rayCastStructure.empty())
 			v_rayCastStructure.emplace_back(RayCastStructure{ d_depth, 0, false, Point2D(), nullptr, 0});
-		else if (CORRECTION) {
+		else if (CORRECTION == 1) {
 			for (auto& el : v_rayCastStructure) {
 				el.distance *= cos(direction - oldFrame.direction);
+			}
+		}
+		else if (CORRECTION == 2) {
+			for (auto& el : v_rayCastStructure) {
+				el.distance = el.distance / cos(direction - oldFrame.direction);
 			}
 		}
 
@@ -493,7 +510,7 @@ void Camera::updateDistances(int from, int to)
 			point.x /= MAP_SCALE;
 			point.y /= MAP_SCALE;
 
-			fov.setPoint(i + 1, point);
+			fov.setPoint(i + 1, point); // because of this the game crashes!!! // CRASH CRASH CRASH
 		}
 	}
 }
@@ -771,6 +788,32 @@ void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure k, int
 	lk.unlock();
 }
 
+void Camera::drawRunningWind(RenderTarget& window, int dt)
+{
+	string str = WIND_TEXTURE;
+	size_t dot = str.find_last_of(".");
+	string type = str.substr(dot, str.length() - dot);
+
+	str = str.substr(0, str.length() - type.length()) + to_string(wind_index + 1) + type;
+
+	Sprite wind;
+
+	/*Texture texture;
+	checkptr(texture, ResourceManager::loadTexture(str));
+	wind.setTexture(texture, true);*/
+
+	wind.setTexture(*ResourceManager::loadTexture(str), true);
+
+	window.draw(wind);
+
+	wind_count += dt;
+
+	if (wind_count >= wind_speed) {
+		wind_index = (wind_index + 1) % 3;
+		wind_count = 0;
+	}
+}
+
 void Camera::draw_map(sf::RenderTarget& window)
 {
 	if (!b_2d_map) { return; }
@@ -792,7 +835,7 @@ void Camera::draw_map(sf::RenderTarget& window)
 	window.draw(player);
 }
 
-void Camera::drawCameraView(sf::RenderTarget& window)
+void Camera::drawCameraView(sf::RenderTarget& window, int dt)
 {
 	// sky
 	if (b_textured) {
@@ -816,5 +859,8 @@ void Camera::drawCameraView(sf::RenderTarget& window)
 	weapon.draw(window);
 	lk.unlock();
 
+	if (d_walk == 2) {
+		drawRunningWind(window, dt);
+	}
 }
 
