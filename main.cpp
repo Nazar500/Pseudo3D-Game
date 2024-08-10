@@ -159,7 +159,7 @@ int main()
             }
             else {
                 camera->startFrameProcessing();
-                camera->drawCameraView(window, d_elapsedTime * 1000);
+                camera->drawCameraView(window, (int)(d_elapsedTime * 1000));
                 camera->endFrameProcessing();
 
                 world.draw(window);
