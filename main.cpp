@@ -22,13 +22,38 @@ string format_value(const double& value, const char& fill, const size_t& precisi
     return oss.str();
 }
 
+void updateCam(Camera* cam, vector<pair<string, bool>> settings, double sens) {
+    if(cam->getTextured() != settings[0].second)
+        cam->setTextured(settings[0].second);
+
+    if (cam->getCollision() != settings[1].second)
+        cam->setCollision(settings[1].second);
+
+    if (cam->get2D_map() != settings[2].second)
+        cam->set2D_map(settings[2].second);
+
+    if (cam->getSounds() != settings[4].second)
+        cam->setSounds(settings[4].second);
+
+    if (cam->getMusic() != settings[5].second)
+        cam->setMusic(settings[5].second);
+
+    if (cam->getSensivity() != sens) 
+        cam->setSensivity(sens);
+}
+
 int main()
 {
     HWND hWnd = GetConsoleWindow();
     #ifdef _DEBUG
         ShowWindow(hWnd, 1);
     #else
-        ShowWindow(hWnd, 0);
+        if (!DEBUG) {
+            ShowWindow(hWnd, 0);
+        }
+        else {
+            ShowWindow(hWnd, 1);
+        }
     #endif
 
     srand((unsigned int)time(0));
@@ -70,7 +95,7 @@ int main()
     world.addObject2D(std::make_shared<Circle2D>(Circle2D(SCALE * 4, { SCALE_WINDOW * SCALE, SCALE_WINDOW * SCALE }, 1.)), "column4");
 
     // objects
-    world.addObject2D(std::make_shared<Object2D>(Object2D({ SIDE * 0.4, SIDE / 6 }, { {0, 0}, {SIDE / 5, 0}, {SIDE / 5, SIDE / 5} })), "triangle1");
+    world.addObject2D(std::make_shared<Object2D>(Object2D({ SIDE * 0.4, SIDE / 6 }, { {0, 0}, {SIDE / 5, 0}, {SIDE / 5, SIDE / 5} }, 1., 0, IMAG_INSRUCTION, 1)), "triangle1");
     world.addObject2D(std::make_shared<Object2D>(Object2D({ SIDE * 0.4, SIDE / 3 }, { {0, 0}, {SIDE / 5, SIDE / 5}, {0, SIDE / 2.5} }, 1., 1)), "triangle2"); // {0, SIDE / 2.5}, {SIDE / 5, SIDE / 5}
 
     world.addObject2D(std::make_shared<Object2D>(Object2D({ SIDE * 0.8, SIDE / 6 }, { {0, 0}, {SCALE, 0}, {SCALE, SCALE}, {0, SCALE} }, 0.5)), "cube1");
@@ -81,12 +106,6 @@ int main()
     // 2d objs
     world.addObject2D(std::make_shared<FlatObject>(FlatObject({ SIDE * 0.25, SIDE * 0.25 })), "BALDI");
 
-    bool learn = false;
-    bool botView = false;
-
-    camera->setTextured(true);
-    camera->setCollision(true);
-    camera->set2D_map(true);
     camera->SoundsPause();
 
     double dt = 0.02;
@@ -146,8 +165,8 @@ int main()
         }
 
         // Actually game
-        window.clear(sf::Color::White);
         if (menu.getState() == Tabs::Play) {
+            window.clear();
             window.setMouseCursorVisible(false);
             camera->SoundsResume();
             if (MIRROR_DEBUG) {
@@ -158,15 +177,25 @@ int main()
                 camera->endFrameProcessing();
             }
             else {
+                test->startFrameProcessing();
+                test->endFrameProcessing();
+
                 camera->startFrameProcessing();
                 camera->drawCameraView(window, (int)(d_elapsedTime * 1000));
                 camera->endFrameProcessing();
 
-                world.draw(window);
+                if (camera->get2D_map()) {
+                    world.draw(window);
+                }
                 camera->draw_map(window);
             }
         }
         else {
+            window.clear(sf::Color::White);
+
+            camera->SoundsPause();
+            updateCam(camera.get(), menu.getSettings(), menu.getSensivity());
+
             menu.update(window, Mouse::getPosition(window));
         }
         window.display();

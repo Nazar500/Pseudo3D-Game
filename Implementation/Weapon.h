@@ -25,7 +25,7 @@ private:
 	double w_recoil;
 	int ammo;
 
-	bool anim_recoil = false, anim_reload = false, anim_flash = false;
+	bool anim_recoil = false, anim_reload = false, anim_flash = false, w_sounds = true;
 
 	// offset refering the trunk (of arm), reloading_offset ( to what position have the arm with the holder move (local coordinates system)), flash_offset (the offset points where the falsh have to be placed)
 	Point2D offset, r_offset, f_offset;
@@ -39,6 +39,9 @@ public:
 
 	double getDamage() const;
 	void setDamage(double damage);
+
+	bool getSounds() const;
+	void setSounds(bool active);
 
 	// in seconds
 	void setReloadTime(double time);

@@ -17,15 +17,15 @@ Weapon::Weapon(double damage, double reload_time, int ammo, double recoil, const
 	aim.setTexture(aim_t);
 
 	// configure
-	aim.setScale(0.25, 0.25);
+	aim.setScale((Point2D(0.25f, 0.25f) * (DISTANCES_SEGMENTS / 1280)).to_sff());
 	aim.setOrigin(aim.getLocalBounds().width / 2, aim.getLocalBounds().height / 2);
 	aim.setPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 
-	flash.setScale(0.75, 0.75);
+	flash.setScale((Point2D(0.75f, 0.75f) * (DISTANCES_SEGMENTS / 1280)).to_sff());
 	flash.setOrigin(flash.getLocalBounds().width, flash.getLocalBounds().height);
 
-	arm.setScale(1.5, 1.5);
-	trunk.setScale(1.5, 1.5);
+	arm.setScale((Point2D(1.5f, 1.5f) * (DISTANCES_SEGMENTS / 1280)).to_sff());
+	trunk.setScale((Point2D(1.5f, 1.5f) * (DISTANCES_SEGMENTS / 1280)).to_sff());
 
 	// sound
 
@@ -39,6 +39,16 @@ double Weapon::getDamage() const
 void Weapon::setDamage(double damage)
 {
 	w_damage = damage;
+}
+
+bool Weapon::getSounds() const
+{
+	return this->w_sounds;
+}
+
+void Weapon::setSounds(bool active)
+{
+	this->w_sounds = active;
 }
 
 void Weapon::setReloadTime(double time)
@@ -64,7 +74,9 @@ bool Weapon::setShotSound(const string& filename)
 bool Weapon::shoot()
 {
 	if (!anim_recoil && !anim_reload) {
-		shot.play();
+		if (w_sounds) {
+			shot.play();
+		}
 		anim_recoil = true;
 		d_recoilTime.restart();
 		anim_flash = true;
@@ -129,7 +141,9 @@ void Weapon::draw(sf::RenderTarget& window)
 		d_trunkTime.restart();
 		d_armTime.restart();
 
-		reload.play();
+		if (w_sounds) {
+			reload.play();
+		}
 
 		// debug
 		//r_time.restart();

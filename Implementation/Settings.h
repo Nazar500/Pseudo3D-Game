@@ -26,8 +26,9 @@
 #define SIDE SCALE_WINDOW * SCALE
 
 // SCREEN SIZE
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 720
+#define FULLSCREEN true
+#define SCREEN_WIDTH 1280 // 1280
+#define SCREEN_HEIGHT 720 // 720
 #define TITLE "SFML Pseudo3D"
 
 // NETWORK
@@ -70,17 +71,19 @@
 #define FOG_SEGMENTS 32
 #define FOG_INTENSITY 0.83
 
+#define PROTECTED_CONFIG true
+#define DEBUG true
 #define MIRROR_DEBUG false
 #define THREADED true
 #define PLAYERS_FLAT true
 
 #define DIS_SEG_FOR_BOTS 8 // How much vertical sectors we use in ray cast
-#define DISTANCES_SEGMENTS 1280 // How much vertical sectors we use in ray cast
+#define DISTANCES_SEGMENTS SCREEN_WIDTH // How much vertical sectors we use in ray cast
 #define FLOOR_SEGMENT_SIZE 8
 
 #define FPS 60
 #define MONITOR_TILE (SCREEN_WIDTH / DISTANCES_SEGMENTS)
-#define DIST /*(FOV < PI-0.1) ? */DISTANCES_SEGMENTS / (tan(FOV / 2) * 2) * 13 * FOV / (PI / 2) * 1280 / DISTANCES_SEGMENTS/* : DISTANCES_SEGMENTS * 3*/
+#define DIST /*(FOV < PI-0.1) ? */DISTANCES_SEGMENTS / (tan(FOV / 2) * 2) * 13 * FOV / (PI / 2) * DISTANCES_SEGMENTS / 1280/* : DISTANCES_SEGMENTS * 3*/
 
 #define OUTLINE_SEGMENTS false
 #define OUTLINE_SEGMENTS_COLOR { 0, 0, 0, 255 }
@@ -119,6 +122,10 @@ inline std::string getBaseName(const std::string& path) {
 #define COLUMN_TEXTURE BUILDED ? "../../../Textures/Walls/column1.jpg" : "Textures/Walls/column1.jpg"
 
 #define WIND_TEXTURE BUILDED ? "../../../Textures/BackGrounds/wind.png" : "Textures/BackGrounds/wind.png"
+#define IMAG_TEXTURES_OFF BUILDED ? "../../../Textures/Backgrounds/Textures_off.png" : "Textures/Backgrounds/Textures_off.png"
+#define IMAG_MIRRORS BUILDED ? "../../../Textures/Backgrounds/Mirrors.png" : "Textures/Backgrounds/Mirrors.png"
+#define IMAG_MAP BUILDED ? "../../../Textures/Backgrounds/Map.png" : "Textures/Backgrounds/Map.png"
+#define IMAG_INSRUCTION BUILDED ?  "../../../Textures/Walls/Instruction.png" : "Textures/Walls/Instruction.png"
 
 #define WEAPON_ARM_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/Arm.png" : "Textures/Weapons/Shotgun/Arm.png"
 #define WEAPON_TRUNK_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/Trunk.png" : "Textures/Weapons/Shotgun/Trunk.png"

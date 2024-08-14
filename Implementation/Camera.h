@@ -155,10 +155,12 @@ private:
 	double d_verticalShift = 0;
 	int d_reflection_limit;
 
-	bool b_collision = true;
+	bool b_collision = false;
 	bool b_textured = false;
 	bool b_hadFocus = false;
-	bool b_2d_map = true;
+	bool b_2d_map = false;
+	bool b_music = false;
+	bool b_sounds = false;
 
 	World& W_world;
 
@@ -202,6 +204,7 @@ private:
 protected:
 	void shift_col(Point2D vector);
 	void shift(Point2D vector);
+	void recoil_shift(Point2D vector);
 
 public:
 	explicit Camera(World& world, const Point2D& position, double vPos = 0, double height = 0.6, double health = 100., const std::string& texture = SKIN, const std::string& texture1 = SKIN1, double fieldOfView = FOV, double angle = FOV, double eyesHeight = 1.f, double depth = 9000, double walkSpeed = 400, double jumpSpeed = 2.75, double viewSpeed = .002, int reflection_limit = 20);
@@ -210,15 +213,25 @@ public:
 
 	void SoundsPause();
 	void SoundsResume();
+	void SoundsCorrection();
 
 	void setTextured(bool active);
-	bool getTextured();
+	bool getTextured() const;
 
 	void setCollision(bool active);
-	bool getCollision();
+	bool getCollision() const;
 
 	void set2D_map(bool active);
-	bool get2D_map();
+	bool get2D_map() const;
+
+	void setSensivity(double value);
+	double getSensivity() const;
+
+	void setSounds(bool active);
+	bool getSounds() const;
+
+	void setMusic(bool active);
+	bool getMusic() const;
 
 	static sf::Vector2f scaling(const sf::Vector2u& size_before, const sf::Vector2u& size_after);
 	sf::Vector2f scaling(const sf::IntRect& size_before, const sf::Vector2u& size_after);

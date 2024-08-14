@@ -20,6 +20,10 @@ public:
 
 		p_points = p_s_points;
 	}
+
+	double getSquareSide() const {
+		return s_size;
+	}
 };
 
 #endif

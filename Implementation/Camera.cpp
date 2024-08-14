@@ -27,9 +27,7 @@ Camera::Camera(World& world, const Point2D& position, double vPos, double height
 	}
 
 	// 2d map
-	if (b_2d_map) {
-		fov.setPointCount(CONVEX_NUMBER + 1);
-	}
+	fov.setPointCount(CONVEX_NUMBER + 1);
 
 	checkptr(walkSound, ResourceManager::loadSound(WALK_SOUND));
 
@@ -85,18 +83,35 @@ void Camera::SoundsPause()
 		walkSound.pause();
 		backGround.pause();
 	}
-	if (menuMusic.getStatus() != Music::Status::Playing) {
+	if (menuMusic.getStatus() != Music::Status::Playing && b_music) {
 		menuMusic.play();
 	}
+
+	SoundsCorrection();
 }
 
 void Camera::SoundsResume()
 {
-	if (backGround.getStatus() != Music::Status::Playing) {
+	if (backGround.getStatus() != Music::Status::Playing && b_music) {
 		backGround.play();
 	}
 	if (menuMusic.getStatus() != Music::Status::Paused) {
 		menuMusic.pause();
+	}
+
+	SoundsCorrection();
+}
+
+void Camera::SoundsCorrection()
+{
+	if (!b_music) {
+		if (backGround.getStatus() != Music::Stopped)
+			backGround.stop();
+		if (menuMusic.getStatus() != Music::Stopped) 
+			menuMusic.stop();
+	}
+	if (weapon.getSounds() != this->b_sounds) {
+		weapon.setSounds(this->b_sounds);
 	}
 }
 
@@ -248,11 +263,11 @@ void Camera::keyboardControl(double dt, sf::Vector2i position, RenderTarget& win
 	if (move == Point2D(0, 0)) {
 		d_walk = 0;
 	}
-	if (d_walk == 2 && d_old_walk != 2) {
+	if (d_walk == 2 && d_old_walk != 2 && b_sounds) {
 		walkSound.setPitch(2.f);
 		walkSound.play();
 	}
-	else if (d_walk == 1 && d_old_walk != 1) {
+	else if (d_walk == 1 && d_old_walk != 1 && b_sounds) {
 		walkSound.setPitch(1.f);
 		walkSound.play();
 	}
@@ -295,19 +310,20 @@ void Camera::fire(vector<RayCastStructure>& v_rayCast, Point2D vect)
 	if (!v_rayCast.empty()) {
 		for (auto& rayCast : v_rayCast) {
 			Object2D* obj = rayCast.object;
-			Player* playerObj = dynamic_cast<Player*>(obj); // if(obj->type() == ObjectType::player){...}
-			if (playerObj) {
-				double damage = weapon.getDamage() / max((double)(rayCast.distance / d_depth * 30), (double)1);
+			Camera* camObj = dynamic_cast<Camera*>(obj); // if(obj->type() == ObjectType::player){...}
+			if (camObj) {
+				double damage = camObj->weapon.getDamage() / max((double)(rayCast.distance / camObj->d_depth * 30), (double)1);
 
-				vect *= damage;
-				playerObj->translate(vect);
+				Point2D move_vect = vect * damage;
+				
+				camObj->recoil_shift(move_vect);
 
-				if (playerObj->reduceHealth(damage)) {
+				if (camObj->reduceHealth(damage)) {
 					this->oneMoreKill();
 				}
 			}
 			if (!rayCast.v_mirrorRayCast.empty()) {
-				fire(rayCast.v_mirrorRayCast, rayCast.rayDirection);
+				fire(rayCast.v_mirrorRayCast, rayCast.rayDirection.normalized());
 			}
 		}
 	}
@@ -318,7 +334,7 @@ void Camera::setTextured(bool active)
 	b_textured = active;
 }
 
-bool Camera::getTextured()
+bool Camera::getTextured() const
 {
 	return b_textured;
 }
@@ -328,7 +344,7 @@ void Camera::setCollision(bool active)
 	b_collision = active;
 }
 
-bool Camera::getCollision()
+bool Camera::getCollision() const
 {
 	return b_collision;
 }
@@ -338,8 +354,38 @@ void Camera::set2D_map(bool active)
 	b_2d_map = active;
 }
 
-bool Camera::get2D_map() {
+bool Camera::get2D_map() const {
 	return b_2d_map;
+}
+
+void Camera::setSensivity(double value)
+{
+	this->d_viewSpeed = value;
+}
+
+double Camera::getSensivity() const
+{
+	return this->d_viewSpeed;
+}
+
+void Camera::setSounds(bool active)
+{
+	b_sounds = active;
+}
+
+bool Camera::getSounds() const
+{
+	return this->b_sounds;
+}
+
+void Camera::setMusic(bool active)
+{
+	b_music = active;
+}
+
+bool Camera::getMusic() const
+{
+	return this->b_music;
 }
 
 void Camera::setFieldOfView(double angle)
@@ -437,6 +483,18 @@ void Camera::shift(Point2D vector)
 	p_pos += vector;
 }
 
+void Camera::recoil_shift(Point2D vector)
+{
+	Point2D point = min_element(this->oldFrame.collisions.begin(), this->oldFrame.collisions.end(), [](const CollisionInfo& p1, const CollisionInfo& p2) {return p1.distance < p2.distance; })->point;
+	Point2D new_point = p_pos + vector;
+
+	cout << COLLISION_DISTANCE + this->getSquareSide() / 2. << endl << (new_point - point).length() << endl << endl;
+
+	if (COLLISION_DISTANCE + this->getSquareSide() / 2. < (new_point - point).length()) {
+		p_pos += vector;
+	}
+}
+
 
 void Camera::updateHiddenDistances(int from, int to)
 {
@@ -500,7 +558,9 @@ void Camera::updateDistances(int from, int to)
 		delete coll;
 
 		// 2d map
-		if (!b_2d_map) { continue; }
+		if (!this->get2D_map()) {
+			continue;
+		}
 		size_t dist_index = static_cast<size_t>(i * DISTANCES_SEGMENTS / CONVEX_NUMBER);
 
 		if (dist_index < DISTANCES_SEGMENTS && !oldFrame.distances[0].empty()) {
@@ -599,7 +659,7 @@ void Camera::objectsRayCrossed(std::pair<Point2D, Point2D>& ray, std::vector<Ray
 				}
 	 		}
 			
-			v_raycast.push_back({ dist, len, Texture1, angle, obj, obj->height(), v_mirrorRayCast });
+			v_raycast.push_back({ dist, len, Texture1, angle, obj, obj->height(), v_mirrorRayCast});
 
 			if (dist <= COLLISION_AREA && b_collision && collision) {
 				collision->point = point;
@@ -803,7 +863,11 @@ void Camera::drawRunningWind(RenderTarget& window, int dt)
 	wind.setTexture(texture, true);*/
 
 	wind.setTexture(*ResourceManager::loadTexture(str), true);
+	wind.setColor({ 255, 255, 255, 16 });
 
+	Vector2u wind_size = wind.getTexture()->getSize();
+	wind.setScale(scaling(wind_size, Vector2u(SCREEN_WIDTH, SCREEN_HEIGHT)));
+	
 	window.draw(wind);
 
 	wind_count += dt;
@@ -816,7 +880,7 @@ void Camera::drawRunningWind(RenderTarget& window, int dt)
 
 void Camera::draw_map(sf::RenderTarget& window)
 {
-	if (!b_2d_map) { return; }
+	if (!this->get2D_map()) { return; }
 
 	fov.setOutlineColor(FILED_OF_VEW_OUTLINE_COLOR);
 	fov.setFillColor(FILED_OF_VEW_COLOR);

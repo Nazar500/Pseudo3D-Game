@@ -15,15 +15,13 @@ private:
 
 	std::map<std::string, std::shared_ptr<Object2D>> map_objects;
 
-	int d_length = 0;
-	int d_width = 0;
 	unsigned char players = 0;
 
 	sf::Texture T_sky_texture;
 	sf::Texture T_floor_texture;
 
 public: 
-	World(int length = 100, int width = 100, const std::string& sky_texture = SKY_TEXTURE);
+	World(const std::string& sky_texture = SKY_TEXTURE);
 
 	bool addObject2D(const std::shared_ptr<Object2D> object, const std::string& name);
 	bool removeObject2D(const std::string& name);

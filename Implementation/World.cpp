@@ -1,7 +1,7 @@
 #include "World.h"
 #include "ResourceManager.h"
 
-World::World(int length, int width, const std::string& sky_texture) : d_length(length), d_width(width)
+World::World(const std::string& sky_texture)
 {
 	checkptr(T_sky_texture, ResourceManager::loadTexture(sky_texture));
 }
