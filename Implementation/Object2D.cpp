@@ -12,6 +12,7 @@ Object2D::Object2D(const Object2D& object2D)
 	this->T_texture = object2D.T_texture; 
 	this->T_texture1 = object2D.T_texture1; 
 	this->T_texture_path = object2D.T_texture_path;
+	this->T_texture1_path = object2D.T_texture1_path;
 	this->whole_texture_overlay = object2D.whole_texture_overlay;
 	this->b_mirror = object2D.b_mirror;
 
@@ -47,6 +48,7 @@ const sf::Texture& Object2D::loadTexture() const
 
 void Object2D::setTexture1(const std::string& TEXTURE1)
 {
+	this->T_texture1_path = TEXTURE1;
 	checkptr(T_texture1, ResourceManager::loadTexture(TEXTURE1));
 }
 
@@ -55,9 +57,14 @@ const sf::Texture& Object2D::loadTexture1() const
 	return T_texture1;
 }
 
-const string Object2D::loadTexturePath() const
+const string& Object2D::loadTexturePath() const
 {
 	return T_texture_path;
+}
+
+const string& Object2D::loadTexturePath1() const
+{
+	return T_texture1_path;
 }
 
 
@@ -209,12 +216,18 @@ void Object2D::rotate(double angle)
 
 void Object2D::rotation(double angle)
 {
+	d_rotation = angle;
 	Point2D vec(angle);
 
 	for (int i = 0; i < nodes().size(); i++) {
 		p_points[i].x = p_s_points[i].x * cos(angle) - p_s_points[i].y * sin(angle);
 		p_points[i].y = p_s_points[i].x * sin(angle) + p_s_points[i].y * cos(angle);
 	}
+}
+
+double Object2D::getRotation() const
+{
+	return d_rotation;
 }
 
 double Object2D::height() const

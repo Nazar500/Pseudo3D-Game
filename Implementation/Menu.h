@@ -3,7 +3,8 @@
 
 #include "Settings.h"
 #include "ResourceManager.h"
-#include"Point2D.h"
+#include "Point2D.h"
+#include "SFML/Network/IpAddress.hpp"
 
 #include <sstream>
 
@@ -29,13 +30,16 @@ private:
 	std::vector<pair<string, bool>> settingTabs;
 
 	double sensivity = .002, maxSensivity = .02, minSensivity = .0;
+	IpAddress localIp;
+	IpAddress globalIp;
 
 	Font& f;
 	Vector2i mouse;
+	bool was_released;
 public:
 	explicit Menu(Font& font, Text::Style style, unsigned char size);
 
-	void update(RenderTarget& sc, Vector2i mouse_position);
+	void update(RenderTarget& sc, Vector2i mouse_position, IpAddress global_ip);
 	void to_main();
 	void draw(RenderTarget& sc);
 

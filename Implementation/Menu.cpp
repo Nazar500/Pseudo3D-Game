@@ -1,13 +1,16 @@
 #include "Menu.h"
 
-Menu::Menu(Font& font, Text::Style style, unsigned char size) : f(font), size(size), style(style)
+Menu::Menu(Font& font, Text::Style style, unsigned char size) : f(font), size(size), style(style), was_released(true)
 {
+	localIp = IpAddress::getLocalAddress();
+	globalIp = IpAddress::getPublicAddress(milliseconds(5000));
+
 	text_width = (int)(Text("Settings", font, size).getLocalBounds().width);
 	left = SCREEN_WIDTH / 2 - text_width / 2 - text_width / 7;
 
 	interval = (SCREEN_HEIGHT - size * 2 * Tabs::Main) / Tabs::Main;
 
-	vector<string> temp = split("Textures,Collisions,Map,Log,Sounds,Music,Sensivity", ',');
+	vector<string> temp = split("Textures,Collisions,Map,Online,Sounds,Music,Sensivity", ',');
 	settingTabs.resize(temp.size());
 
 	for (int i = 0; i < temp.size(); i++) {
@@ -15,9 +18,10 @@ Menu::Menu(Font& font, Text::Style style, unsigned char size) : f(font), size(si
 	}
 }
 
-void Menu::update(RenderTarget& sc, Vector2i mouse_position)
+void Menu::update(RenderTarget& sc, Vector2i mouse_position, IpAddress global_ip)
 {
 	mouse = mouse_position;
+	globalIp = global_ip;
 
 	if (getState() > 1) {
 		draw(sc);
@@ -31,6 +35,8 @@ void Menu::to_main()
 
 void Menu::draw(RenderTarget& sc)
 {
+	if (!Mouse::isButtonPressed(Mouse::Left)) { was_released = true; }
+
 	switch (tab) {
 	case Tabs::Play:
 		break;
@@ -75,6 +81,7 @@ void Menu::draw(RenderTarget& sc)
 				text.setFillColor({ 255, 255, 255 });
 				if (Mouse::isButtonPressed(Mouse::Left)) {
 					tab = ((Tabs)i == Tabs::Main) ? Tabs::Quit : (Tabs)i;
+					was_released = false;
 				}
 			}
 			else {
@@ -108,7 +115,7 @@ void Menu::draw(RenderTarget& sc)
 		if (rect.contains(mouse)) {
 			text.setFillColor({0, 255, 255});
 			text.setOutlineColor({ 0, 0, 0 });
-			if (Mouse::isButtonPressed(Mouse::Left)) {
+			if (Mouse::isButtonPressed(Mouse::Left) && was_released) {
 				to_main();
 			}
 		}
@@ -187,6 +194,8 @@ void Menu::draw_settings(RenderTarget& sc)
 		Vector2f pos = { (float)x, (x > SCREEN_WIDTH / 2) ? (SCREEN_HEIGHT / 4) * (i - 3.7f) : SCREEN_HEIGHT / 5 * (i + 0.5f) };
 
 		Text t(settingTabs[i].first, f, t_size);
+		t.setStyle(style);
+
 		Vector2f bounds = t.getGlobalBounds().getSize();
 
 		t.setStyle(style);
@@ -201,7 +210,41 @@ void Menu::draw_settings(RenderTarget& sc)
 
 		Vector2f frame_pos = frame.getPosition(), frame_size = frame.getSize();
 
-		if (i == settingTabs.size() - 1) {
+		if (settingTabs[i].first == "Online" && settingTabs[i].second) {
+			Vector2f ip_pos = { frame_pos.x, frame_pos.y + frame_size.y + SCREEN_WIDTH / 160.f };
+
+			string l_res = "Your Local IP: " + localIp.toString();
+			string g_res = "Your Global IP: " + globalIp.toString();
+
+			Text l_ip(l_res, f, (unsigned int)(t_size * settingTabs[i].first.length() / l_res.length()));
+			Text g_ip(g_res, f, (unsigned int)(t_size * settingTabs[i].first.length() / g_res.length()));
+			l_ip.setPosition(ip_pos.x + SCREEN_WIDTH / 320.f, ip_pos.y);
+			l_ip.setFillColor({ 0, 0, 0 });
+			g_ip.setFillColor({ 0, 0, 0 });
+			l_ip.setStyle(style);
+			g_ip.setStyle(style);
+
+			Vector2f bounds_ip = l_ip.getGlobalBounds().getSize();
+
+			RectangleShape frame_ip(Vector2f(bounds_ip.x + SCREEN_WIDTH / 160.f, bounds_ip.y + l_ip.getCharacterSize() * .25f));
+			frame_ip.setPosition(ip_pos.x, ip_pos.y + l_ip.getCharacterSize() * .08f);
+			frame_ip.setFillColor(Color::Transparent);
+			frame_ip.setOutlineThickness(1.f);
+			frame_ip.setOutlineColor({ 0, 0, 0 });
+			
+			sc.draw(l_ip);
+			sc.draw(frame_ip);
+
+			frame_ip.setPosition(ip_pos.x, ip_pos.y + frame_ip.getLocalBounds().height + g_ip.getCharacterSize() * .08f + SCREEN_HEIGHT / 160.f);
+			g_ip.setPosition(frame_ip.getPosition().x + SCREEN_WIDTH / 320.f, frame_ip.getPosition().y);
+
+			if (globalIp != IpAddress::None) {
+				sc.draw(g_ip);
+				sc.draw(frame_ip);
+			}
+		}
+
+		if (settingTabs[i].first == "Sensivity") {
 			Vector2f value_pos = { frame_pos.x, frame_pos.y + frame_size.y + SCREEN_HEIGHT / 20.f };
 			Text value(to_string(sensivity), f, t_size / 2);
 			value.setFillColor({ 255, 255, 255 });
@@ -241,15 +284,15 @@ void Menu::draw_about(RenderTarget& sc) const
 	temp.setFillColor({ 0, 0, 0 });
 
 	int width = SCREEN_WIDTH / 3;
-	int height;
+	int height = SCREEN_HEIGHT / 3;
 
 	Texture map_;
-	if (checkptr(map_, ResourceManager::loadTexture(IMAG_MAP)) && false) {
+	/*if (checkptr(map_, ResourceManager::loadTexture(IMAG_MAP)) && false) {
 		height = (int)map_.getSize().y;
 	}
 	else {
 		height = SCREEN_HEIGHT / 3;
-	}
+	}*/
 
 	for (int i = 0; i < 3; i++) {
 		std::string image = "";
@@ -312,7 +355,7 @@ void Menu::draw_slider(RenderTarget& sc, const Vector2f& pos, int width, int hei
 	rect.setPosition(pos);
 
 	IntRect hitbox(Rect<int>((int)pos.x, (int)pos.y, width, height));
-	if (hitbox.contains(mouse) && Mouse::isButtonPressed(Mouse::Left)) {
+	if (hitbox.contains(mouse) && Mouse::isButtonPressed(Mouse::Left) && was_released) {
 		sensivity = (mouse.x - pos.x) / (double)width * maxSensivity;
 	}
 
@@ -344,7 +387,7 @@ void Menu::draw_switcher(RenderTarget& sc, const Vector2f& pos, int width, int h
 
 	RectangleShape switcher(Vector2f(width / 2.f, (float)height));
 	Text t((val) ? "ON" : "OFF", f, size / 3);
-	t.rotate((float)PI / 2.f);
+	//t.rotate((float)PI / 2.f);
 	t.setFillColor({ 0, 0, 0 });
 
 	if (val) {
@@ -357,10 +400,10 @@ void Menu::draw_switcher(RenderTarget& sc, const Vector2f& pos, int width, int h
 		switcher.setPosition(pos.x + width / 2.f, pos.y);
 		switcher.setFillColor({ 230, 20, 20 });
 
-		t.setPosition(pos.x + width / 2.f + size * .125f, pos.y);
+		t.setPosition(pos.x + width - t.getGlobalBounds().getSize().x - size * 0.1f, pos.y); // t.setPosition(pos.x + width / 2.f + size * .125f, pos.y);
 	}
 
-	if (IntRect(Rect<int>((int)switcher.getGlobalBounds().left, (int)switcher.getGlobalBounds().top, (int)switcher.getGlobalBounds().width, (int)switcher.getGlobalBounds().height)).contains(mouse) && Mouse::isButtonPressed(Mouse::Left)) {
+	if (IntRect(Rect<int>((int)switcher.getGlobalBounds().left, (int)switcher.getGlobalBounds().top, (int)switcher.getGlobalBounds().width, (int)switcher.getGlobalBounds().height)).contains(mouse) && Mouse::isButtonPressed(Mouse::Left) && was_released) {
 		val = !val;
 	}
 

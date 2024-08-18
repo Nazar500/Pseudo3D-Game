@@ -1,11 +1,11 @@
 #include "Camera.h"
 
 Camera::Camera(World& world, const Point2D& position, double vPos, double height, double health, const std::string& texture, const std::string& texture1, double fieldOfView, double angle, double eyesHeight, double depth, double walkSpeed, double jumpSpeed, double viewSpeed, int reflection_limit)
-	: W_world(world), d_eyesHeight(eyesHeight), d_depth(depth), d_walkSpeed(walkSpeed), d_jumpSpeed(jumpSpeed), d_viewSpeed(viewSpeed), Player(position, height, health, texture), d_direction(angle), d_reflection_limit(reflection_limit)
+	: W_world(world), d_eyesHeight(eyesHeight), d_depth(depth), d_walkSpeed(walkSpeed), d_jumpSpeed(jumpSpeed), d_viewSpeed(viewSpeed), Player(position, height, health, texture, texture1), d_direction(angle), d_reflection_limit(reflection_limit)
 {
 	// angle configuration
 	setFieldOfView(fieldOfView);
-	setTexture1(texture1);
+	/*setTexture1(texture1);*/
 
 	oldFrame.distances.resize(DISTANCES_SEGMENTS);
 	oldFrame.collisions.resize(COLLISION_SEGMENTS);
@@ -180,9 +180,7 @@ void Camera::endFrameProcessing()
 {
 	if (THREADED) {
 		std::unique_lock<std::mutex> lk(endM);
-		while (finished != threadCount) {
-			endCV.wait(lk, [this] { return finished == threadCount; });
-		}
+		endCV.wait(lk, [this] { return finished == threadCount; });
 	}
 	std::swap(oldFrame, curFrame);
 	oldFrame.direction = d_direction;
@@ -318,7 +316,7 @@ void Camera::fire(vector<RayCastStructure>& v_rayCast, Point2D vect)
 				
 				camObj->recoil_shift(move_vect);
 
-				if (camObj->reduceHealth(damage)) {
+				if (camObj->reduceHealth(damage) && this != camObj) {
 					this->oneMoreKill();
 				}
 			}
@@ -488,6 +486,7 @@ void Camera::recoil_shift(Point2D vector)
 	Point2D point = min_element(this->oldFrame.collisions.begin(), this->oldFrame.collisions.end(), [](const CollisionInfo& p1, const CollisionInfo& p2) {return p1.distance < p2.distance; })->point;
 	Point2D new_point = p_pos + vector;
 
+	cout << oldFrame.collisions[0].distance << endl;
 	cout << COLLISION_DISTANCE + this->getSquareSide() / 2. << endl << (new_point - point).length() << endl << endl;
 
 	if (COLLISION_DISTANCE + this->getSquareSide() / 2. < (new_point - point).length()) {

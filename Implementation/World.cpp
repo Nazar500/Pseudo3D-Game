@@ -29,7 +29,7 @@ std::shared_ptr<Object2D> World::operator[](std::string& name)
 	return findObject2D(name);
 }
 
-bool World::addObject2D(const std::shared_ptr<Object2D> object, const std::string& name) {
+bool World::addObject2D(const std::shared_ptr<Object2D>& object, const std::string& name) {
 	if (name != "" && name != "None") {
 		return map_objects.insert({ name, object }).second;
 	}

@@ -17,10 +17,10 @@ protected:
 	Point2D p_pos;
 
 	sf::Texture T_texture, T_texture1;
-	string T_texture_path;
+	string T_texture_path, T_texture1_path;
 	bool whole_texture_overlay, b_mirror;
 
-	double d_height, d_aspectRatio = 0.2, l_width = 0, l_length = 0;
+	double d_height, d_rotation, d_aspectRatio = 0.2, l_width = 0, l_length = 0;
 
 public:
 	Object2D(const Object2D& object2D);
@@ -31,12 +31,14 @@ public:
 
 	void setTexture1(const std::string& TEXTURE1);
 	const sf::Texture& loadTexture1() const;
-	const string loadTexturePath() const;
+	const string& loadTexturePath() const;
+	const string& loadTexturePath1() const;
 	virtual ObjectType type();
 
 	std::vector<Point2D> world_nodes(double number);
 	void rotate(double angle);
 	void rotation(double angle);
+	double getRotation() const;
 
 	[[nodiscard]] double x() const;
 	[[nodiscard]] double y() const;

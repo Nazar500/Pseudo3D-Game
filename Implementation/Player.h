@@ -18,12 +18,15 @@ protected:
 	void oneMoreKill();
 	void oneMoreDeath();
 public:
-	explicit Player(const Point2D& position, double height = 1., double health = 100, const std::string& TEXTURE = SKIN);
+	explicit Player(const Point2D& position, double height = 0.6, double health = 100, const std::string& TEXTURE = SKIN, const std::string& TEXTURE1 = SKIN1);
 	Player(const Player& player);
 
+	void setPosition(const Point2D& pos);
+	Point2D getStartPos() const;
 	double health() const;
 	ObjectType type() override;
 
+	void setHealth(double health);
 	bool reduceHealth(const double& damage);
 	int getKills() const;
 	int getDeaths() const;

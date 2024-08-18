@@ -23,7 +23,7 @@ private:
 public: 
 	World(const std::string& sky_texture = SKY_TEXTURE);
 
-	bool addObject2D(const std::shared_ptr<Object2D> object, const std::string& name);
+	bool addObject2D(const std::shared_ptr<Object2D>& object, const std::string& name);
 	bool removeObject2D(const std::string& name);
 	std::map<std::string, std::shared_ptr<Object2D>> objects();
 

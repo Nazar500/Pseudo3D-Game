@@ -22,7 +22,19 @@ string format_value(const double& value, const char& fill, const size_t& precisi
     return oss.str();
 }
 
-void updateCam(Camera* cam, vector<pair<string, bool>> settings, double sens) {
+void draw_load(RenderWindow& sc, const Font& f, const Text::Style& style, const string& text) {
+    sc.clear({ 255, 255, 255 });
+
+    Text t(text, f, (int)(SCREEN_HEIGHT / 5.f));
+    t.setFillColor({ 0, 0, 0 });
+    t.setStyle(style);
+    t.setPosition((SCREEN_WIDTH - t.getLocalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f - t.getCharacterSize() / 2.f);
+
+    sc.draw(t);
+    sc.display();
+}
+
+void updateCam(Camera* cam, vector<pair<string, bool>> settings, double sens, bool& online) {
     if(cam->getTextured() != settings[0].second)
         cam->setTextured(settings[0].second);
 
@@ -32,6 +44,9 @@ void updateCam(Camera* cam, vector<pair<string, bool>> settings, double sens) {
     if (cam->get2D_map() != settings[2].second)
         cam->set2D_map(settings[2].second);
 
+    if (online != settings[3].second)
+        online = settings[3].second;
+
     if (cam->getSounds() != settings[4].second)
         cam->setSounds(settings[4].second);
 
@@ -40,6 +55,33 @@ void updateCam(Camera* cam, vector<pair<string, bool>> settings, double sens) {
 
     if (cam->getSensivity() != sens) 
         cam->setSensivity(sens);
+}
+
+void InitNet(unique_ptr<ServerUdp>& server, unique_ptr<ClientUdp>& client, World& world, shared_ptr<Player> player, bool& isServer) {
+    ifstream file(CONNECT_FILE, ifstream::in);
+
+    IpAddress ip;
+    unsigned short port;
+
+    string temp;
+    if (file.is_open()) {
+        getline(file, temp);
+        ip = temp;
+
+        getline(file, temp);
+        port = (unsigned short)stoi(temp);
+    }
+
+    file.close();
+
+    if (ip == IpAddress::LocalHost) {
+        server = make_unique<ServerUdp>(world, player, ip, port);
+        isServer = true;
+    }
+    else {
+        client = make_unique<ClientUdp>(world, player, ip, port);
+        isServer = false;
+    }
 }
 
 int main()
@@ -71,10 +113,28 @@ int main()
 
     window.setFramerateLimit(FPS);
 
+    // Menu Init
+    draw_load(window, font, text_style, "Intializing...");
+    Menu menu(font, text_style, 50);
+
     // World Init
     World world;
+
+    // Camera Init
     std::shared_ptr<Camera> camera(new Camera(world, { SIDE / 2, -SIDE / 2 }));
+    std::shared_ptr<Player> player = static_pointer_cast<Player>(camera);
+
     std::shared_ptr<Camera> test(new Camera(world, { SIDE / 3, SIDE / 4 }, 0., 0.6, 5000.));
+
+    // Network Init
+    bool b_serv, online = true;
+
+    unique_ptr<ClientUdp> client;
+    unique_ptr<ServerUdp> server;
+
+    InitNet(server, client, world, player, b_serv);
+    if (b_serv)
+        server->start();
 
     sf::Mouse::setPosition((Point2D(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2) + Point2D(window.getPosition())).to_sfi());
     window.setMouseCursorVisible(true);
@@ -113,9 +173,8 @@ int main()
 
     sf::Clock dt_clock;
 
-    Menu menu(font, text_style, 50);
-    ClientUdp client(world);
-    //ServerUdp server(world);
+    // test
+    //updateCam(test.get(), menu.getSettings(), test->getSensivity(), online);
 
     // Game loop
     while (window.isOpen())
@@ -136,6 +195,33 @@ int main()
             title += " x:" + std::to_string(camera->x()) + ", y:" + std::to_string(camera->y()) + ", health: " + std::to_string(camera->health()) + ", kills: " + std::to_string(camera->getKills()) + ", deaths: " + std::to_string(camera->getDeaths());
         window.setTitle(title);
 
+        if (b_serv) {
+            if (online) {
+                server->process();
+                if (!server->isBinded()) {
+                    server->start();
+                    draw_load(window, font, text_style, "Restarting...");
+                }
+            }
+            else {
+                if (server->isBinded()) {
+                    server->stop();
+                }
+            }
+        }
+        else {
+            if (online) {
+                client->process();
+                if (!client->isConnected()) {
+                    client->connect();
+                }
+            }
+            else {
+                if (client->isConnected()) {
+                    client->disconnect();
+                }
+            }
+        }
         // Close event search
         sf::Event event;
         while (window.pollEvent(event))
@@ -160,12 +246,10 @@ int main()
             }
         }
 
-        if (!menu.getState()) {
-            window.close();
-        }
-
         // Actually game
-        if (menu.getState() == Tabs::Play) {
+        if (!menu.getState())
+            window.close();
+        else if (menu.getState() == Tabs::Play) {
             window.clear();
             window.setMouseCursorVisible(false);
             camera->SoundsResume();
@@ -178,6 +262,7 @@ int main()
             }
             else {
                 test->startFrameProcessing();
+                //test->drawCameraView(window, (int)(d_elapsedTime * 1000));
                 test->endFrameProcessing();
 
                 camera->startFrameProcessing();
@@ -194,9 +279,9 @@ int main()
             window.clear(sf::Color::White);
 
             camera->SoundsPause();
-            updateCam(camera.get(), menu.getSettings(), menu.getSensivity());
+            updateCam(camera.get(), menu.getSettings(), menu.getSensivity(), online);
 
-            menu.update(window, Mouse::getPosition(window));
+            menu.update(window, Mouse::getPosition(window), (b_serv) ? server->getGlobalIp() : IpAddress::None);
         }
         window.display();
 
@@ -204,6 +289,9 @@ int main()
             camera->keyboardControl(d_elapsedTime, window.getPosition(), window);
     }
 
+    if (!b_serv) {
+        client->disconnect();
+    }
     ResourceManager::unloadAllResources();
 
     return 0;
