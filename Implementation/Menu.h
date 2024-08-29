@@ -56,6 +56,9 @@ public:
 	Tabs getState() const;
 	double getSensivity() const;
 	vector<pair<string, bool>> getSettings() const;
+	pair<sf::Font, sf::Text::Style> getFont() const;
+
+	void SetPerception(bool active);
 };
 
 #endif

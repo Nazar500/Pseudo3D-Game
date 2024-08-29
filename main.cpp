@@ -1,18 +1,14 @@
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "Implementation/Settings.h"
-#include "Implementation/World.h"
-#include "Implementation/Camera.h"
-#include "Implementation/Object2D.h"
-#include "Implementation/FlatObject.h"
+#include "Implementation/ClientUdp.h"
+#include "Implementation/ServerUdp.h"
 #include "Implementation/Menu.h"
 
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <fstream>
-#include <windows.h>
 
 using namespace std;
 
@@ -25,7 +21,7 @@ string format_value(const double& value, const char& fill, const size_t& precisi
 void draw_load(RenderWindow& sc, const Font& f, const Text::Style& style, const string& text) {
     sc.clear({ 255, 255, 255 });
 
-    Text t(text, f, (int)(SCREEN_HEIGHT / 5.f));
+    Text t(text, f, (int)(SCREEN_SIDE / 8.f));
     t.setFillColor({ 0, 0, 0 });
     t.setStyle(style);
     t.setPosition((SCREEN_WIDTH - t.getLocalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f - t.getCharacterSize() / 2.f);
@@ -34,7 +30,7 @@ void draw_load(RenderWindow& sc, const Font& f, const Text::Style& style, const 
     sc.display();
 }
 
-void updateCam(Camera* cam, vector<pair<string, bool>> settings, double sens, bool& online) {
+void updateCam(Camera* cam, vector<pair<string, bool>>& settings, double sens, bool& online) {
     if(cam->getTextured() != settings[0].second)
         cam->setTextured(settings[0].second);
 
@@ -44,8 +40,10 @@ void updateCam(Camera* cam, vector<pair<string, bool>> settings, double sens, bo
     if (cam->get2D_map() != settings[2].second)
         cam->set2D_map(settings[2].second);
 
-    if (online != settings[3].second)
+    if (online != settings[3].second) {
         online = settings[3].second;
+        cam->setOnline(online);
+    }
 
     if (cam->getSounds() != settings[4].second)
         cam->setSounds(settings[4].second);
@@ -57,11 +55,14 @@ void updateCam(Camera* cam, vector<pair<string, bool>> settings, double sens, bo
         cam->setSensivity(sens);
 }
 
-void InitNet(unique_ptr<ServerUdp>& server, unique_ptr<ClientUdp>& client, World& world, shared_ptr<Player> player, bool& isServer) {
+void InitNet(unique_ptr<ServerUdp>& server, unique_ptr<ClientUdp>& client, World& world, shared_ptr<Camera>& camera, bool& isServer) {
     ifstream file(CONNECT_FILE, ifstream::in);
 
     IpAddress ip;
     unsigned short port;
+
+    if (DEBUG)
+        cout << "Started Reading from File  ";
 
     string temp;
     if (file.is_open()) {
@@ -73,13 +74,16 @@ void InitNet(unique_ptr<ServerUdp>& server, unique_ptr<ClientUdp>& client, World
     }
 
     file.close();
+    
+    if (DEBUG)
+        cout << "Ended Reading from File\n";
 
     if (ip == IpAddress::LocalHost) {
-        server = make_unique<ServerUdp>(world, player, ip, port);
+        server = make_unique<ServerUdp>(world, camera, ip, port);
         isServer = true;
     }
     else {
-        client = make_unique<ClientUdp>(world, player, ip, port);
+        client = make_unique<ClientUdp>(world, camera, ip, port);
         isServer = false;
     }
 }
@@ -90,7 +94,7 @@ int main()
     #ifdef _DEBUG
         ShowWindow(hWnd, 1);
     #else
-        if (!DEBUG) {
+        if (!CONSOLE) {
             ShowWindow(hWnd, 0);
         }
         else {
@@ -100,9 +104,22 @@ int main()
 
     srand((unsigned int)time(0));
 
+    ofstream log("log.txt");
+    streambuf* old = nullptr;
+
+    if (LOG && DEBUG) {
+        old = cout.rdbuf();
+        cout.rdbuf(log.rdbuf());
+    }
+
     // Window should be created first because of drawing context.
+    if (DEBUG)
+        cout << "Started Loading Font ";
     Font font;
-    font.loadFromFile("C:/Windows/Fonts/CascadiaMono.ttf");
+    font.loadFromFile(FONT);
+
+    if (DEBUG)
+        cout << "Ended Loading Font\n";
 
     Text::Style text_style = Text::Style::Bold;
 
@@ -115,33 +132,41 @@ int main()
 
     // Menu Init
     draw_load(window, font, text_style, "Intializing...");
-    Menu menu(font, text_style, 50);
+    Menu menu(font, text_style, (unsigned char)(SCREEN_SIDE / 20.f));
 
     // World Init
     World world;
 
     // Camera Init
     std::shared_ptr<Camera> camera(new Camera(world, { SIDE / 2, -SIDE / 2 }));
-    std::shared_ptr<Player> player = static_pointer_cast<Player>(camera);
 
-    std::shared_ptr<Camera> test(new Camera(world, { SIDE / 3, SIDE / 4 }, 0., 0.6, 5000.));
+    if(DEBUG)
+        cout << "Ended Configuring Camera\n";
+
+    //std::shared_ptr<Camera> test(new Camera(world, { SIDE / 3, SIDE / 4 }, 0., 0.6, 5000.));
 
     // Network Init
-    bool b_serv, online = true;
+    bool b_serv = false, online = NETWORK;
 
     unique_ptr<ClientUdp> client;
     unique_ptr<ServerUdp> server;
 
-    InitNet(server, client, world, player, b_serv);
-    if (b_serv)
-        server->start();
+    if (DEBUG)
+        cout << "Started Configuring Network    ";
+
+   // for(int i = 0; i < 1; i++)
+    if(NETWORK)
+        InitNet(server, client, world, camera, b_serv);
+
+    if (DEBUG)
+        cout << "Ended Configuring Network\n";
 
     sf::Mouse::setPosition((Point2D(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2) + Point2D(window.getPosition())).to_sfi());
     window.setMouseCursorVisible(true);
 
     // world
-    world.addObject2D(camera, "");
-    world.addObject2D(test, "");
+    world.addObject2D(camera, "Main Player");
+    //world.addObject2D(test, "");
 
     // walls
     world.addObject2D(std::make_shared<Object2D>(Object2D({ 0, 0 }, { {0, 0}, {SCALE, 0}, {SCALE, SCALE_WINDOW * SCALE}, {0, SCALE_WINDOW * SCALE} }, 1.)), "wall1");
@@ -168,15 +193,14 @@ int main()
 
     camera->SoundsPause();
 
-    double dt = 0.02;
-    int iterations = 0;
-
     sf::Clock dt_clock;
 
     // test
     //updateCam(test.get(), menu.getSettings(), test->getSensivity(), online);
 
     // Game loop
+    if(DEBUG)
+        cout << "Started Main Loop" << "	";
     while (window.isOpen())
     {
         double d_elapsedTime = dt_clock.restart().asSeconds();
@@ -191,39 +215,40 @@ int main()
         if (d_elapsedTime > 0) {
             title += format_value((double)1 / d_elapsedTime, '0', 3, 3) + "fps.";
         }
-        if (camera != nullptr)
+        if (camera)
             title += " x:" + std::to_string(camera->x()) + ", y:" + std::to_string(camera->y()) + ", health: " + std::to_string(camera->health()) + ", kills: " + std::to_string(camera->getKills()) + ", deaths: " + std::to_string(camera->getDeaths());
         window.setTitle(title);
 
         if (b_serv) {
             if (online) {
-                server->process();
                 if (!server->isBinded()) {
                     server->start();
                     draw_load(window, font, text_style, "Restarting...");
                 }
             }
             else {
-                if (server->isBinded()) {
+                if (server && server->isBinded()) {
                     server->stop();
                 }
             }
         }
         else {
             if (online) {
-                client->process();
                 if (!client->isConnected()) {
                     client->connect();
                 }
             }
             else {
-                if (client->isConnected()) {
+                if (client && client->isConnected()) {
                     client->disconnect();
                 }
             }
         }
         // Close event search
         sf::Event event;
+
+        if(DEBUG)
+            cout << "Started pollEvent" << "	";
         while (window.pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
@@ -237,14 +262,11 @@ int main()
 
                     menu.to_main();
                     break;
-
-                case sf::Keyboard::Key::F12:
-                    sf::VideoMode vid = sf::VideoMode::getDesktopMode();
-                    window.setSize({ vid.width, vid.height });
-                    break;
                 }
             }
         }
+        if(DEBUG)
+            cout << "Ended pollEvent" << endl;
 
         // Actually game
         if (!menu.getState())
@@ -261,18 +283,41 @@ int main()
                 camera->endFrameProcessing();
             }
             else {
-                test->startFrameProcessing();
+                //test->startFrameProcessing();
                 //test->drawCameraView(window, (int)(d_elapsedTime * 1000));
-                test->endFrameProcessing();
+                //test->endFrameProcessing();
+
+                if (DEBUG)
+                    cout << "Started Frame Processing" << " ";
 
                 camera->startFrameProcessing();
-                camera->drawCameraView(window, (int)(d_elapsedTime * 1000));
+
+                if (DEBUG)
+                    cout << "Started Drawing" << " ";
+                camera->drawCameraView(window, (int)(d_elapsedTime * 1000), menu.getFont());
+                if (DEBUG)
+                    cout << "Ended Drawing" << endl;
+
                 camera->endFrameProcessing();
+
+                if (DEBUG) {
+                    cout << "Ended Frame Processing" << endl;
+                    cout << "Started Drawing World" << " ";
+                }
 
                 if (camera->get2D_map()) {
                     world.draw(window);
                 }
+
+                if (DEBUG) {
+                    cout << "Ended Drawing World" << endl;
+                    cout << "Started Drawing Map ";
+                }
+
                 camera->draw_map(window);
+
+                if (DEBUG)
+                    cout << "Ended Drawing Map\n";
             }
         }
         else {
@@ -287,12 +332,37 @@ int main()
 
         if (window.hasFocus() && window_rect.contains(sf::Mouse::getPosition()) && menu.getState() == Tabs::Play)
             camera->keyboardControl(d_elapsedTime, window.getPosition(), window);
+
+        if (online) {
+            if (b_serv)
+                server->process();
+            else
+                client->process();
+        }
+    }
+    if (DEBUG) {
+        cout << "Ended Main Loop" << endl;
+        cout << "Finishing..." << endl;
     }
 
     if (!b_serv) {
-        client->disconnect();
+        if(client)
+            client->disconnect();
     }
+    else {
+        if(server)
+            server->stop();
+    }
+
     ResourceManager::unloadAllResources();
+
+    camera->~Camera();
+
+    if(LOG && DEBUG)
+        cout.rdbuf(old);
+    log.close();
+
+    SetFileAttributes("log.txt", FILE_ATTRIBUTE_HIDDEN);
 
     return 0;
 }

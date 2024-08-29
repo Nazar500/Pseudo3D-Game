@@ -8,6 +8,7 @@ Object2D::Object2D(const Object2D& object2D)
 	this->p_points = object2D.p_points;
 	this->p_s_points = object2D.p_points;
 	this->d_height = object2D.d_height;
+	this->d_rotation = object2D.d_rotation;
 
 	this->T_texture = object2D.T_texture; 
 	this->T_texture1 = object2D.T_texture1; 
@@ -20,7 +21,7 @@ Object2D::Object2D(const Object2D& object2D)
 	this->l_length = (*max_element(object2D.p_points.begin(), object2D.p_points.end(), [](const Point2D& p1, const Point2D& p2) { return p1.y < p2.y; })).y;
 }
 
-Object2D::Object2D(Point2D pos, std::vector<Point2D> points, double height, bool mirror, const std::string& TEXTURE, bool all_texture) : p_points(points), p_s_points(points), p_pos(pos), d_height(height), T_texture_path(TEXTURE), whole_texture_overlay(all_texture), b_mirror(mirror) {
+Object2D::Object2D(Point2D pos, std::vector<Point2D> points, double height, bool mirror, const std::string& TEXTURE, bool all_texture) : p_points(points), p_s_points(points), p_pos(pos), d_height(height), T_texture_path(TEXTURE), whole_texture_overlay(all_texture), b_mirror(mirror), d_rotation(0) {
 	checkptr(T_texture, ResourceManager::loadTexture(TEXTURE));
 	checkptr(T_texture1, ResourceManager::loadTexture(TEXTURE));
 }
@@ -202,6 +203,7 @@ std::vector<Point2D> Object2D::world_nodes(double number) {
 
 void Object2D::rotate(double angle)
 {
+	d_rotation += angle;
 	double cosA = cos(angle);
 	double sinA = sin(angle);
 
@@ -217,7 +219,7 @@ void Object2D::rotate(double angle)
 void Object2D::rotation(double angle)
 {
 	d_rotation = angle;
-	Point2D vec(angle);
+	Point2D vec(d_rotation);
 
 	for (int i = 0; i < nodes().size(); i++) {
 		p_points[i].x = p_s_points[i].x * cos(angle) - p_s_points[i].y * sin(angle);

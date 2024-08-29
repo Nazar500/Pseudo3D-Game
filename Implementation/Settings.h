@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <chrono>
 #include <cfenv>
+#include <windows.h>
 
 #define PI 3.1415926535897932384626433832795
 #define ET std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count()
@@ -26,9 +27,12 @@
 #define SIDE SCALE_WINDOW * SCALE
 
 // SCREEN SIZE
-#define FULLSCREEN true
-#define SCREEN_WIDTH 1280 // 1280
-#define SCREEN_HEIGHT 720 // 720
+#define WIDTH 1920 // 1280
+#define HEIGHT 1080 // 720
+
+#define SCREEN_WIDTH max(800, (int)WIDTH) //((WIDTH < 800) ? 800 : WIDTH) // 1280
+#define SCREEN_HEIGHT max(600, (int)HEIGHT) //((HEIGHT < 600) ? 600 : HEIGHT) // 720
+#define SCREEN_SIDE int((SCREEN_WIDTH + SCREEN_HEIGHT) / 2) // 720
 #define TITLE "SFML Pseudo3D"
 
 // NETWORK
@@ -49,7 +53,7 @@
 #define OUTLINE_CAMERA_COLOR {255, 255, 255, 255}
 #define FILL_CAMERA_COLOR {255, 67, 67, 255}
 #define RADIUS_CAMERA SCALE * 2
-#define CONVEX_NUMBER 100
+#define CONVEX_NUMBER int(DISTANCES_SEGMENTS / 10.f)
 #define FILED_OF_VEW_COLOR {255, 189, 51, 0}
 #define FILED_OF_VEW_OUTLINE_COLOR {0, 0, 0, 255}
 #define RED_COLOR {255, 0, 0}
@@ -71,19 +75,21 @@
 #define FOG_SEGMENTS 32
 #define FOG_INTENSITY 0.83
 
-#define PROTECTED_CONFIG true
+#define LOG true
 #define DEBUG true
+#define CONSOLE false
 #define MIRROR_DEBUG false
 #define THREADED true
-#define PLAYERS_FLAT true
+#define NETWORK true
+//#define PLAYERS_FLAT true
 
 #define DIS_SEG_FOR_BOTS 8 // How much vertical sectors we use in ray cast
-#define DISTANCES_SEGMENTS SCREEN_WIDTH // How much vertical sectors we use in ray cast
+#define DISTANCES_SEGMENTS int(SCREEN_WIDTH / 1.f) // How much vertical sectors we use in ray cast
 #define FLOOR_SEGMENT_SIZE 8
 
 #define FPS 60
 #define MONITOR_TILE (SCREEN_WIDTH / DISTANCES_SEGMENTS)
-#define DIST /*(FOV < PI-0.1) ? */DISTANCES_SEGMENTS / (tan(FOV / 2) * 2) * 13 * FOV / (PI / 2) * DISTANCES_SEGMENTS / 1280/* : DISTANCES_SEGMENTS * 3*/
+#define DIST /*(FOV < PI-0.1) ? */DISTANCES_SEGMENTS / (tan(FOV / 2) * 2) * 10 * FOV / (PI / 2) * SCREEN_SIDE / 1000/* : DISTANCES_SEGMENTS * 3*/
 
 #define OUTLINE_SEGMENTS false
 #define OUTLINE_SEGMENTS_COLOR { 0, 0, 0, 255 }
@@ -109,6 +115,8 @@ inline std::string getBaseName(const std::string& path) {
 }
 
 #define BUILDED getBaseName(std::filesystem::current_path().string()) == "build"
+
+#define FONT BUILDED ? "../../../Fonts/CascadiaMono.ttf" : "Fonts/CascadiaMono.ttf"
 
 #define MAIN_TEXTURE BUILDED ? "../../../Textures/TroubleShooting/without_texture.png" : "Textures/TroubleShooting/without_texture.png"
 #define BALDI BUILDED ? "../../../Textures/Heroes/Baldi.png" : "Textures/Heroes/Baldi.png"

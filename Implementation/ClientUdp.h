@@ -2,10 +2,6 @@
 #define CLIENTUDP_H
 
 #include "Sockets.h"
-#include "World.h"
-#include "Player.h"
-
-#include <fstream>
 
 using namespace Sockets;
 
@@ -13,16 +9,20 @@ class ClientUdp {
 private:
 	UdpSocket _socket;
 	World& _world;
-	shared_ptr<Player> _localPlayer;
-	map<IpAddress, shared_ptr<Player>> _players;
+	shared_ptr<Camera> _localPlayer;
+	map<IpAddress, shared_ptr<Camera>> _players;
+	unsigned char errors;
+	bool accepted;
 
 	IpAddress _ip;
 	unsigned short _port;
 
 	bool connected;
+
+	bool check_errors(const Socket::Status& status);
 	
 public:
-	explicit ClientUdp(World& world, shared_ptr<Player>& player, const IpAddress& ip, const unsigned short& port);
+	explicit ClientUdp(World& world, const shared_ptr<Camera>& player, const IpAddress& ip, const unsigned short& port);
 
 	void connect();
 	void disconnect();

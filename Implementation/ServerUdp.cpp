@@ -1,6 +1,45 @@
 #include "ServerUdp.h"
 
-ServerUdp::ServerUdp(World& world, shared_ptr<Player> player, const IpAddress& ip, const unsigned short& port) : _world(world), _localPlayer(player), _port(port)
+bool ServerUdp::check_error(const Socket::Status& status, const IpAddress& ip) {
+	if (_players.count(ip)) {
+		if (status != Socket::Status::Done) {
+			++_players[ip].first.m_errors;
+			return true;
+		}
+		else {
+			_players[ip].first.m_errors = 0;
+		}
+	}
+	return false;
+}
+
+void ServerUdp::disconnectPlayer(const IpAddress& ip)
+{
+	Packet packet;
+	packet << MsgType::Disconnect;
+	_socket.send(packet, ip, _players[ip].first.m_port);
+
+	_world.removeObject2D("Player " + ip.toString());
+	_players.erase(ip);
+}
+
+map<IpAddress, pair<IData, shared_ptr<Camera>>>::iterator ServerUdp::disconnectPlayer(map<IpAddress, pair<IData, shared_ptr<Camera>>>::iterator it)
+{
+	Packet packet;
+	packet << MsgType::Disconnect;
+	_socket.send(packet, it->first, it->second.first.m_port);
+
+	_world.removeObject2D("Player " + it->first.toString());
+	return _players.erase(it);
+}
+
+IData ServerUdp::_find(Camera* ptr)
+{
+	auto it = find_if(_players.begin(), _players.end(), [ptr](const pair<IpAddress, pair<IData, shared_ptr<Camera>>> a) {return a.second.second.get() == ptr; });
+	return ((it != _players.end()) ? it->second.first : IData());
+}
+
+ServerUdp::ServerUdp(World& world, shared_ptr<Camera>& player, const IpAddress& ip, const unsigned short& port) : _world(world), _localPlayer(player), server_port(port)
 {
 	_ip = IpAddress::getLocalAddress();
 	g_ip = IpAddress::getPublicAddress(milliseconds(5000));
@@ -11,21 +50,30 @@ ServerUdp::ServerUdp(World& world, shared_ptr<Player> player, const IpAddress& i
 
 ServerUdp::~ServerUdp()
 {
-	_socket.unbind();
+	if(this->isBinded())
+		stop();
 
-	for (auto&& p : _players) {
-		p.second.reset();
-	}
+	/*for (auto& p : _players) {
+		p.second.second.reset();
+	}*/
 }
 
 void ServerUdp::start()
 {
-	check_sock(_socket.bind(_port, _ip), 1, fstring("Cannot bind the server to port: {}, and ip: {} | in ServerUdp class and line 20\n", { to_string(_port), _ip.toString() }));
+	check_sock(_socket.bind(server_port, _ip), 1, fstring("Cannot bind the server to port: {}, and ip: {} | in ServerUdp class and line 20\n", { to_string(server_port), _ip.toString() }));
 	binded = true;
 	_ip = IpAddress::getLocalAddress();
-	g_ip = IpAddress::getPublicAddress(milliseconds(5000));
+	g_ip == IpAddress::None;
 
-	cout << "Server Started" << endl;
+	if (DEBUG)
+		cout << "Started g_ip Loop" << "	";
+	while (g_ip == IpAddress::None) {
+		g_ip = IpAddress::getPublicAddress(milliseconds(5000));
+	}
+	if (DEBUG) {
+		cout << "Ended g_ip Loop" << "	";
+		cout << "Server Started" << endl;
+	}
 }
 
 void ServerUdp::process()
@@ -36,62 +84,104 @@ void ServerUdp::process()
 	IpAddress _address;
 	unsigned short _port;
 
-	if (!check_sock(_socket.receive(recv_packet, _address, _port))) { return; }
+	if (check_error(_socket.receive(recv_packet, _address, _port), _address) || _address == IpAddress::None || _address == IpAddress::getLocalAddress()) { return; }
 
 	int type;
-	double buf[2];
-	Point2D pos;
-	shared_ptr<Player> player;
+	double dir;
+	Point2D pos, temp_pos;
 	recv_packet >> type;
+
+	if (_localPlayer->getShoot()) {
+		pair<vector<Camera*>::iterator, vector<Camera*>::iterator> iters = _localPlayer->cameraRayCheck();
+
+		for (auto& it = iters.first; it != iters.second;) {
+			Camera* ptr = *(it++);
+			IData temp_i = _find(ptr);
+			if (temp_i.m_ip != IpAddress::None) {
+				send_packet.clear();
+				send_packet << MsgType::Shoot << ptr->position() << ptr->getDeaths();
+
+				_socket.send(send_packet, temp_i.m_ip, temp_i.m_port);
+			}
+		}
+		if (type != int(MsgType::Shoot)) { return; }
+	}
 
 	switch ((MsgType)type) {
 	case MsgType::Connect:
-		send_packet << MsgType::WorldUpdate << _address.toString() << recv_packet;
-		for (auto&& player : _players) {
-			_socket.send(send_packet, player.first, _port);
+		temp_pos = { _localPlayer->getStartPos() + Point2D(((int)_players.size() % 2) ? 400. : -400., 0) * ((int)_players.size() + 1) };
+		pos = Point2D(temp_pos - _localPlayer->getStartPos()).normalized();
+		dir = Point2D(pos.y, -pos.x).vect2Rad();
+		send_packet << MsgType::WorldUpdate << _address.toString() << temp_pos << dir;
+
+		for (auto& player : _players) {
+			if (player.first != _address) {
+				_socket.send(send_packet, player.first, player.second.first.m_port);
+			}
+			else {
+				extra_packet << MsgType::WorldUpdate << _ip << _localPlayer->position() << _localPlayer->getRotation();
+				_socket.send(extra_packet, _address, _port);
+			}
 		}
-		recv_packet >> pos >> buf[0] >> buf[1];
-		//cout << "data received	" << pos.to_str() << endl;
 
-		player = make_shared<Player>(pos, buf[1], buf[0]);
-		_players.emplace(_address, player);
-		_world.addObject2D(player, "Player " + _address.toString());
+		_players.emplace(_address, pair<IData, shared_ptr<Camera>>( {_address, _port}, shared_ptr<Camera>(new Camera(_world, temp_pos))));
+		_world.addObject2D(_players[_address].second, "Player " + _address.toString());
 
-		extra_packet << MsgType::Accept;
+		extra_packet.clear();
+		extra_packet << MsgType::Accept << temp_pos << dir;
 		_socket.send(extra_packet, _address, _port);
-
-		send_packet.clear();
-		send_packet << MsgType::WorldUpdate << _ip.toString() << _localPlayer->position() << _localPlayer->health() << _localPlayer->height();
-		_socket.send(send_packet, _address, _port);
 
 		break;
 
 	case MsgType::Update:
-		double health;
-		send_packet << MsgType::Update << _address.toString() << recv_packet;
-		extra_packet << MsgType::Update << _ip.toString() << _localPlayer->position() << _localPlayer->health();
-		recv_packet >> pos >> health;
+		recv_packet >> pos >> dir;
+		send_packet << MsgType::Update << _address << pos << _players[_address].second->health() << dir;
+		extra_packet << MsgType::Update << _ip << _localPlayer->position() << _localPlayer->health() << _localPlayer->getRotation() << _players[_address].second->health();
 		if (_players.count(_address)) {
-			_players[_address]->setPosition(pos);
-			_players[_address]->setHealth(health);
+			_players[_address].second->setPosition(pos);
+			_players[_address].second->updateFrame();
+			_players[_address].second->setDirection(dir);
 		}
 
-		/*cout << "Updated" << endl;*/
+		for (auto& it = _players.begin(); it != _players.end();) {
+			auto& ip = it->first;
+			auto& data = it->second.first;
 
-		for (auto&& p : _players) {
-			if (p.first != _address) {
-				_socket.send(send_packet, p.first, _port);
+			if (ip != _address) {
+				_socket.send(send_packet, ip, data.m_port);
 			}
 			else {
-				_socket.send(extra_packet, p.first, _port);
+				_socket.send(extra_packet, ip, data.m_port);
+			}
+
+			if (data.m_errors >= 60) {
+				it = disconnectPlayer(it);
+			}
+			else {
+				++it;
 			}
 		}
+
+		break;
+
+	case MsgType::Shoot:
+		_players[_address].second->updateFrame();
+		_players[_address].second->cameraRayCheck();
+
+		extra_packet << MsgType::Kills << _players[_address].second->getKills();
+
+		_socket.send(extra_packet, _address, _players[_address].first.m_port);
+
 		break;
 
 	case MsgType::Disconnect:
-		_players.erase(_address);
-		_world.removeObject2D("Player " + _address.toString());
+		disconnectPlayer(_address);
+		break;
 	}
+
+	// finishing
+
+	
 
 }
 
@@ -100,7 +190,12 @@ void ServerUdp::stop()
 	binded = false;
 	_socket.unbind();
 
-	cout << "Server Stopped" << endl;
+	for (auto& it = _players.begin(); it != _players.end();) {
+		it = disconnectPlayer(it++);
+	}
+
+	if(DEBUG)
+		cout << "Server Stopped" << endl;
 }
 
 bool ServerUdp::isBinded() const

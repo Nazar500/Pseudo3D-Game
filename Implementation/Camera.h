@@ -7,8 +7,6 @@
 #include "Point2D.h"
 #include "ObjectType.h"
 #include "Object2D.h"
-#include "ClientUdp.h"
-#include "ServerUdp.h"
 #include "FlatObject.h"
 #include "World.h"
 #include "Player.h"
@@ -23,6 +21,7 @@
 #include <Windows.h>
 
 using namespace std;
+using namespace sf;
 
 struct Point4D {
 	sf::Uint8 x, y, z, w;
@@ -60,23 +59,23 @@ struct Point4D {
 
 struct RayCastStructure
 {
-	RayCastStructure(double d_dist, double d_prog, bool back_texture, Point2D v_angle, Object2D* obj, double height, std::vector<RayCastStructure> v_mirrorRayCast = {}) {
+	RayCastStructure(double d_dist, double d_prog, bool back_texture, Point2D v_angle, Object2D* obj, double d_height, std::vector<RayCastStructure> v_mirrorRayCast = {}) {
 		distance = d_dist;
 		progress = d_prog;
 		backTexture = back_texture;
 		object = obj;
 		rayDirection = v_angle;
 
-		this->height = height;
+		height = d_height;
 		this->v_mirrorRayCast = v_mirrorRayCast;
 	}
 
-	double distance;
-	double progress;
-	bool backTexture;
-	Point2D rayDirection;
-	Object2D* object;
-	double height;
+	double distance = 1;
+	double progress = 0;
+	bool backTexture = 0;
+	Point2D rayDirection = {0, 0};
+	Object2D* object = nullptr;
+	double height = 1.;
 
 
 	std::vector<RayCastStructure> v_mirrorRayCast;
@@ -157,17 +156,18 @@ private:
 
 	bool b_collision = false;
 	bool b_textured = false;
-	bool b_hadFocus = false;
 	bool b_2d_map = false;
 	bool b_music = false;
 	bool b_sounds = false;
+	bool b_online;
+	bool b_shoot;
 
 	World& W_world;
 
 	// threads
 	short threadCount;
-	std::atomic<int> finished;
-	std::atomic<signed char> work;
+	atomic<int> finished;
+	atomic<signed char> work;
 
 	std::vector<std::shared_ptr<std::thread>> threads;
 	std::mutex renderM;
@@ -187,7 +187,7 @@ private:
 	std::vector<sf::Vector2f> map_points;
 
 	void rayDraw(sf::RenderTarget& window, std::vector<RayCastStructure>& v_raycast, int& shift);
-	void drawVerticalStrip(sf::RenderTarget& window, RayCastStructure k, int shift);
+	void drawVerticalStrip(sf::RenderTarget& window, RayCastStructure& k, int shift);
 	void drawRunningWind(RenderTarget& window, int dt);
 
 	void updateThread(int i, int n);
@@ -224,6 +224,9 @@ public:
 	void set2D_map(bool active);
 	bool get2D_map() const;
 
+	void setOnline(bool active);
+	bool getOnline() const;
+
 	void setSensivity(double value);
 	double getSensivity() const;
 
@@ -233,20 +236,26 @@ public:
 	void setMusic(bool active);
 	bool getMusic() const;
 
+	bool getShoot() const;
+
+	void setDirection(double num);
+	double getDirection() const;
+
 	static sf::Vector2f scaling(const sf::Vector2u& size_before, const sf::Vector2u& size_after);
 	sf::Vector2f scaling(const sf::IntRect& size_before, const sf::Vector2u& size_after);
 
 	void keyboardControl(double dt, sf::Vector2i position, RenderTarget& window);
 	void lookAt(const std::string& name);
 	Point2D normal() const;
-	void fire(vector<RayCastStructure>& v_rayCast, Point2D vect);
-	void cameraRayCheck();
+	pair<vector<Camera*>::iterator, vector<Camera*>::iterator> fire(vector<RayCastStructure>& v_rayCast, Point2D vect);
+	pair<vector<Camera*>::iterator, vector<Camera*>::iterator> cameraRayCheck();
 
 	void startFrameProcessing();
 	void endFrameProcessing();
+	void updateFrame();
 	
 	void draw_map(sf::RenderTarget& window);
-	void drawCameraView(sf::RenderTarget& window, int dt);
+	void drawCameraView(sf::RenderTarget& window, int dt, pair<sf::Font, sf::Text::Style> font);
 };
 
 

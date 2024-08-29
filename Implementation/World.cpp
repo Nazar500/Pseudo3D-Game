@@ -21,7 +21,8 @@ void World::draw(sf::RenderTarget& window)
 	window.draw(background);
 
 	for (auto p : map_objects)
-		p.second->draw(window);
+		if(p.second)
+			p.second->draw(window);
 }
 
 std::shared_ptr<Object2D> World::operator[](std::string& name)
@@ -30,12 +31,7 @@ std::shared_ptr<Object2D> World::operator[](std::string& name)
 }
 
 bool World::addObject2D(const std::shared_ptr<Object2D>& object, const std::string& name) {
-	if (name != "" && name != "None") {
-		return map_objects.insert({ name, object }).second;
-	}
-	else {
-		return map_objects.insert({ to_string(players++), object }).second;
-	}
+	return map_objects.insert({ name, object }).second;
 }
 
 std::shared_ptr<Object2D> World::findObject2D(const std::string& name)
@@ -53,7 +49,7 @@ std::string World::getObject2DName(const Object2D* ptr)
 		if (el.second.get() == ptr)
 			return el.first;
 	}
-	return "None";
+	return "";
 }
 
 bool World::removeObject2D(const std::string& name) {

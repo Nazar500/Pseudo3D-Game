@@ -3,7 +3,7 @@
 Menu::Menu(Font& font, Text::Style style, unsigned char size) : f(font), size(size), style(style), was_released(true)
 {
 	localIp = IpAddress::getLocalAddress();
-	globalIp = IpAddress::getPublicAddress(milliseconds(5000));
+	globalIp = IpAddress::None;
 
 	text_width = (int)(Text("Settings", font, size).getLocalBounds().width);
 	left = SCREEN_WIDTH / 2 - text_width / 2 - text_width / 7;
@@ -14,7 +14,7 @@ Menu::Menu(Font& font, Text::Style style, unsigned char size) : f(font), size(si
 	settingTabs.resize(temp.size());
 
 	for (int i = 0; i < temp.size(); i++) {
-		settingTabs[i] = pair(temp[i], true);
+		settingTabs[i] = pair(temp[i], !(temp[i] == "Map" || (temp[i] == "Online" && !NETWORK)));
 	}
 }
 
@@ -77,7 +77,7 @@ void Menu::draw(RenderTarget& sc)
 			int width = (int)text.getGlobalBounds().width;
 			text.setPosition(left + (box_width - width) / 2.f, box_top + size / 2.5f);
 
-			if (button.contains(mouse)) {
+			if (button.contains(mouse) && was_released) {
 				text.setFillColor({ 255, 255, 255 });
 				if (Mouse::isButtonPressed(Mouse::Left)) {
 					tab = ((Tabs)i == Tabs::Main) ? Tabs::Quit : (Tabs)i;
@@ -105,7 +105,7 @@ void Menu::draw(RenderTarget& sc)
 	if (tab < 4 && tab > 1) {
 		Text text("<<< Back (Escape)", f, size / 3);
 
-		Vector2f text_pos = { 5, 0 };
+		Vector2f text_pos = { (float)int(SCREEN_WIDTH / 256.f), (float)int(SCREEN_HEIGHT / 216.f) };
 
 		text.setPosition(text_pos);
 		text.setOutlineThickness(-1);
@@ -139,9 +139,13 @@ std::vector<std::string> Menu::split(const std::string& str, const char& delimet
 	istringstream iss(str);
 	std::string temp;
 
+	if (DEBUG)
+		cout << "Started split Loop" << "	";
 	while (getline(iss, temp, delimeter)) {
 		res.push_back(temp);
 	}
+	if (DEBUG)
+		cout << "Ended split Loop" << endl;
 
 	return res;
 }
@@ -189,7 +193,7 @@ void Menu::draw_settings(RenderTarget& sc)
 	unsigned char t_size = (int)(size * 1.5f);
 
 	for (int i = 0; i < settingTabs.size(); i++) {
-		int x = (int)((i < 4) ? SCREEN_WIDTH * 0.05f : SCREEN_WIDTH * 6.f / 10);
+		int x = (int)((i < 4) ? SCREEN_WIDTH * 0.02f : SCREEN_WIDTH * 6.f / 10);
 
 		Vector2f pos = { (float)x, (x > SCREEN_WIDTH / 2) ? (SCREEN_HEIGHT / 4) * (i - 3.7f) : SCREEN_HEIGHT / 5 * (i + 0.5f) };
 
@@ -225,6 +229,7 @@ void Menu::draw_settings(RenderTarget& sc)
 			g_ip.setStyle(style);
 
 			Vector2f bounds_ip = l_ip.getGlobalBounds().getSize();
+			Vector2f bounds_g_ip = g_ip.getGlobalBounds().getSize();
 
 			RectangleShape frame_ip(Vector2f(bounds_ip.x + SCREEN_WIDTH / 160.f, bounds_ip.y + l_ip.getCharacterSize() * .25f));
 			frame_ip.setPosition(ip_pos.x, ip_pos.y + l_ip.getCharacterSize() * .08f);
@@ -236,6 +241,7 @@ void Menu::draw_settings(RenderTarget& sc)
 			sc.draw(frame_ip);
 
 			frame_ip.setPosition(ip_pos.x, ip_pos.y + frame_ip.getLocalBounds().height + g_ip.getCharacterSize() * .08f + SCREEN_HEIGHT / 160.f);
+			frame_ip.setSize(Vector2f(bounds_g_ip.x + SCREEN_WIDTH / 160.f, bounds_g_ip.y + g_ip.getCharacterSize() * .25f));
 			g_ip.setPosition(frame_ip.getPosition().x + SCREEN_WIDTH / 320.f, frame_ip.getPosition().y);
 
 			if (globalIp != IpAddress::None) {
@@ -253,14 +259,14 @@ void Menu::draw_settings(RenderTarget& sc)
 			Vector2f slider_pos = { value_pos.x, value_pos.y + t_size / 2.f + SCREEN_HEIGHT / 40.f };
 			draw_slider(sc, slider_pos, (int)frame_size.x, (int)(frame_size.y / 2.f));
 
-			RectangleShape value_rect(Vector2f(value.getGlobalBounds().getSize().x + SCREEN_WIDTH / 80.f, value.getGlobalBounds().getSize().y + SCREEN_HEIGHT / 60.f));
+			RectangleShape value_rect(Vector2f(value.getGlobalBounds().getSize().x + SCREEN_WIDTH / 80.f, value.getGlobalBounds().getSize().y + SCREEN_HEIGHT / 50.f));
 			value_rect.setFillColor({ 0, 0, 0 });
-			value_rect.setPosition(value_pos.x, value_pos.y);
+			value_rect.setPosition(value_pos.x, value_pos.y - SCREEN_HEIGHT / 240.f);
 
 			sc.draw(value_rect);
 			sc.draw(value);
 		}
-		else {
+		else if(settingTabs[i].first != "Online" || NETWORK) {
 			draw_switcher(sc, { frame_pos.x + frame_size.x + SCREEN_WIDTH / 30.f, frame_pos.y }, SCREEN_WIDTH / 10, (int)frame_size.y, i);
 		}
 
@@ -425,6 +431,16 @@ double Menu::getSensivity() const
 vector<pair<string, bool>> Menu::getSettings() const
 {
 	return settingTabs;
+}
+
+pair<sf::Font, sf::Text::Style> Menu::getFont() const
+{
+	return pair<sf::Font, sf::Text::Style>(f, style);
+}
+
+void Menu::SetPerception(bool active)
+{
+	was_released = active;
 }
 
 

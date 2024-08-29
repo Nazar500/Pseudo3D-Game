@@ -17,18 +17,17 @@ Weapon::Weapon(double damage, double reload_time, int ammo, double recoil, const
 	aim.setTexture(aim_t);
 
 	// configure
-	aim.setScale((Point2D(0.25f, 0.25f) * (DISTANCES_SEGMENTS / 1280)).to_sff());
+	aim.setScale((Point2D(0.25f, 0.25f) * (SCREEN_SIDE / 1000.f)).to_sff());
 	aim.setOrigin(aim.getLocalBounds().width / 2, aim.getLocalBounds().height / 2);
-	aim.setPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+	aim.setPosition(SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f);
 
-	flash.setScale((Point2D(0.75f, 0.75f) * (DISTANCES_SEGMENTS / 1280)).to_sff());
+	flash.setScale((Point2D(0.75f, 0.75f) * (SCREEN_SIDE / 1000.f)).to_sff());
 	flash.setOrigin(flash.getLocalBounds().width, flash.getLocalBounds().height);
 
-	arm.setScale((Point2D(1.5f, 1.5f) * (DISTANCES_SEGMENTS / 1280)).to_sff());
-	trunk.setScale((Point2D(1.5f, 1.5f) * (DISTANCES_SEGMENTS / 1280)).to_sff());
+	arm.setScale((Point2D(1.5f, 1.5f) * (SCREEN_SIDE / 1000.f)).to_sff());
+	trunk.setScale((Point2D(1.5f, 1.5f) * (SCREEN_SIDE / 1000.f)).to_sff());
 
 	// sound
-
 }
 
 double Weapon::getDamage() const

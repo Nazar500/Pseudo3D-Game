@@ -12,7 +12,6 @@ class FlatObject : public Object2D
 {
 private:
 	double f_scale;
-	double f_camera_angle;
 
 public:
 	explicit FlatObject(Point2D pos, string f_texture_path = BALDI, double scale_x = 1., double height = 1.);

@@ -1,7 +1,7 @@
 #include "Camera.h"
 
 Camera::Camera(World& world, const Point2D& position, double vPos, double height, double health, const std::string& texture, const std::string& texture1, double fieldOfView, double angle, double eyesHeight, double depth, double walkSpeed, double jumpSpeed, double viewSpeed, int reflection_limit)
-	: W_world(world), d_eyesHeight(eyesHeight), d_depth(depth), d_walkSpeed(walkSpeed), d_jumpSpeed(jumpSpeed), d_viewSpeed(viewSpeed), Player(position, height, health, texture, texture1), d_direction(angle), d_reflection_limit(reflection_limit)
+	: W_world(world), d_eyesHeight(eyesHeight), d_depth(depth), d_walkSpeed(walkSpeed), d_jumpSpeed(jumpSpeed), d_viewSpeed(viewSpeed), Player(position, height, health, texture, texture1), d_direction(angle), d_reflection_limit(reflection_limit), b_online(NETWORK), b_shoot(false)
 {
 	// angle configuration
 	setFieldOfView(fieldOfView);
@@ -139,9 +139,20 @@ void Camera::updateThread(int i, int n)
 
 	signed char lastWork = 1;
 	std::unique_lock<std::mutex> lk(startM);
+
+	if (DEBUG)
+		cout << "Started Thread " << to_string(i) << "	";
 	while (true)
 	{
+		if (DEBUG)
+			cout << "Started Waiting Thread " << to_string(i) << "	";
+
+		
 		startCV.wait(lk, [this, lastWork] {return work != lastWork; });
+
+		if (DEBUG)
+			cout << "Ended Waiting Thread " << to_string(i) << endl;
+
 		lastWork = work;
 		lk.unlock();
 
@@ -154,21 +165,34 @@ void Camera::updateThread(int i, int n)
 		updateHiddenDistances(from2, to2);
 
 		// Notify main thread about finished work
-		++finished;
-		endCV.notify_all();
-		lk.lock();
+		lk.lock();  // Re-acquire the lock before modifying shared state
+		finished.fetch_add(1);
+
+		if (finished >= threadCount) {
+			endCV.notify_one(); 
+			if (DEBUG)
+				cout << "EndCV notified\n";
+		}
 	}
+	if(DEBUG)
+		cout << "Ended Thread " << to_string(i) << endl;
 }
 
 void Camera::startFrameProcessing()
 {
 	srand(static_cast<unsigned int>(time(NULL)));
-
-	signed char newWork = 1 - work;
+	
 	if (THREADED) {
+		signed char newWork = 1 - work;
 		finished = 0;
+		
+		unique_lock<mutex> lk(startM);
 		work = newWork;
+		lk.unlock();
+		
 		startCV.notify_all();
+		if (DEBUG)
+			cout << "StartCV notified\n";
 	}
 	else {
 		updateDistances(0, DISTANCES_SEGMENTS);
@@ -180,17 +204,31 @@ void Camera::endFrameProcessing()
 {
 	if (THREADED) {
 		std::unique_lock<std::mutex> lk(endM);
-		endCV.wait(lk, [this] { return finished == threadCount; });
+
+		if (DEBUG)
+			cout << "Started Waiting" << " ";
+
+		while (finished < threadCount) {
+			endCV.wait(lk, [this] { return finished == threadCount; });
+		}
+
+		if(DEBUG)
+			cout << "Ended Waiting" << endl;
 	}
 	std::swap(oldFrame, curFrame);
-	oldFrame.direction = d_direction;
-	oldFrame.position = p_pos;
+	updateFrame();
 
 	this->rotation(oldFrame.direction);
 
 	// check for exceptions
 
 	//if (std::fetestexcept(FE_DIVBYZERO)) { throw std::runtime_error("Error"); }
+}
+
+void Camera::updateFrame()
+{
+	oldFrame.direction = d_direction;
+	oldFrame.position = p_pos;
 }
 
 void Camera::keyboardControl(double dt, sf::Vector2i position, RenderTarget& window) {
@@ -239,8 +277,16 @@ void Camera::keyboardControl(double dt, sf::Vector2i position, RenderTarget& win
 
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
 		if (weapon.shoot()) {
-			this->cameraRayCheck();
+			if(!b_online)
+				this->cameraRayCheck();
+			b_shoot = true;
 		}
+		else {
+			b_shoot = false;
+		}
+	}
+	else {
+		b_shoot = false;
 	}
 
 	// mouse 
@@ -294,37 +340,45 @@ Point2D Camera::normal() const
 	return Point2D(oldFrame.direction);
 }
 
-void Camera::cameraRayCheck() {
+pair<vector<Camera*>::iterator, vector<Camera*>::iterator> Camera::cameraRayCheck() {
 	pair<Point2D, Point2D> ray = { position(), Point2D(x() + d_depth * cos(oldFrame.direction), y() + d_depth * sin(oldFrame.direction)) };
 	vector<RayCastStructure> v_rayCast;
 
 	objectsRayCrossed(ray, v_rayCast, this);
 
-	fire(v_rayCast, Point2D(ray.second - ray.first).normalized());
+	return fire(v_rayCast, Point2D(ray.second - ray.first).normalized());
 }
 
-void Camera::fire(vector<RayCastStructure>& v_rayCast, Point2D vect)
+pair<vector<Camera*>::iterator, vector<Camera*>::iterator> Camera::fire(vector<RayCastStructure>& v_rayCast, Point2D vect)
 {
+	vector<Camera*> res;
 	if (!v_rayCast.empty()) {
-		for (auto& rayCast : v_rayCast) {
-			Object2D* obj = rayCast.object;
-			Camera* camObj = dynamic_cast<Camera*>(obj); // if(obj->type() == ObjectType::player){...}
-			if (camObj) {
-				double damage = camObj->weapon.getDamage() / max((double)(rayCast.distance / camObj->d_depth * 30), (double)1);
+		/*for (auto& rayCast : v_rayCast) {*/
+		RayCastStructure rayCast = v_rayCast[v_rayCast.size() - 1];
+		Object2D* obj = rayCast.object;
+		Camera* camObj = dynamic_cast<Camera*>(obj); // if(obj->type() == ObjectType::player){...}
+		if (camObj) {
+			double damage = camObj->weapon.getDamage() / max((double)(rayCast.distance / camObj->d_depth * 30), (double)1);
 
-				Point2D move_vect = vect * damage;
+			Point2D move_vect = vect * damage;
 				
-				camObj->recoil_shift(move_vect);
+			camObj->recoil_shift(move_vect);
 
-				if (camObj->reduceHealth(damage) && this != camObj) {
-					this->oneMoreKill();
-				}
+			if (camObj->reduceHealth(damage) && this != camObj) {
+				this->oneMoreKill();
 			}
-			if (!rayCast.v_mirrorRayCast.empty()) {
-				fire(rayCast.v_mirrorRayCast, rayCast.rayDirection.normalized());
-			}
+
+			res.push_back(camObj);
 		}
+		if (!rayCast.v_mirrorRayCast.empty()) {
+			pair<vector<Camera*>::iterator, vector<Camera*>::iterator> iters = fire(rayCast.v_mirrorRayCast, rayCast.rayDirection.normalized());
+			vector<Camera*> _else(iters.first, iters.second);
+			res.insert(res.end(), _else.begin(), _else.end());
+		}
+		//}
 	}
+
+	return pair<vector<Camera*>::iterator, vector<Camera*>::iterator>(res.begin(), res.end());
 }
 
 void Camera::setTextured(bool active)
@@ -356,6 +410,16 @@ bool Camera::get2D_map() const {
 	return b_2d_map;
 }
 
+void Camera::setOnline(bool active)
+{
+	b_online = active;
+}
+
+bool Camera::getOnline() const
+{
+	return b_online;
+}
+
 void Camera::setSensivity(double value)
 {
 	this->d_viewSpeed = value;
@@ -384,6 +448,22 @@ void Camera::setMusic(bool active)
 bool Camera::getMusic() const
 {
 	return this->b_music;
+}
+
+bool Camera::getShoot() const
+{
+	return this->b_shoot;
+}
+
+void Camera::setDirection(double num)
+{
+	d_direction = num;
+	rotation(num);
+}
+
+double Camera::getDirection() const
+{
+	return d_direction;
 }
 
 void Camera::setFieldOfView(double angle)
@@ -486,10 +566,10 @@ void Camera::recoil_shift(Point2D vector)
 	Point2D point = min_element(this->oldFrame.collisions.begin(), this->oldFrame.collisions.end(), [](const CollisionInfo& p1, const CollisionInfo& p2) {return p1.distance < p2.distance; })->point;
 	Point2D new_point = p_pos + vector;
 
-	cout << oldFrame.collisions[0].distance << endl;
-	cout << COLLISION_DISTANCE + this->getSquareSide() / 2. << endl << (new_point - point).length() << endl << endl;
+	//cout << oldFrame.collisions[0].distance << endl;
+	//cout << COLLISION_DISTANCE / 2. + this->getSquareSide() / 2. << endl << (new_point - point).length() << endl << endl;
 
-	if (COLLISION_DISTANCE + this->getSquareSide() / 2. < (new_point - point).length()) {
+	if (COLLISION_DISTANCE / 2. + this->getSquareSide() / 2. < (new_point - point).length()) {
 		p_pos += vector;
 	}
 }
@@ -569,7 +649,7 @@ void Camera::updateDistances(int from, int to)
 			point.x /= MAP_SCALE;
 			point.y /= MAP_SCALE;
 
-			fov.setPoint(i + 1, point); // because of this the game crashes!!! // CRASH CRASH CRASH
+			fov.setPoint(i + 1, point);
 		}
 	}
 }
@@ -588,10 +668,10 @@ void Camera::objectsRayCrossed(std::pair<Point2D, Point2D>& ray, std::vector<Ray
 
 	for (auto& el : W_world.objects()) {
 		FlatObject* obj_2d = dynamic_cast<FlatObject*>(el.second.get());
-		Camera* obj_player = dynamic_cast<Camera*>(el.second.get());
+		Player* obj_player = dynamic_cast<Player*>(el.second.get());
 		Object2D* obj = el.second.get();
 
-		if (obj == caster) { continue; }
+		if (obj == caster || obj == nullptr) { continue; }
 
 		// update camera_angle if FlatObject crossed
 		if (obj_2d) {
@@ -607,7 +687,10 @@ void Camera::objectsRayCrossed(std::pair<Point2D, Point2D>& ray, std::vector<Ray
 				Point2D wall_vector = wall.second - wall.first;
 				Point2D norm_vector = Point2D(wall_vector.y, -wall_vector.x).normalized();
 
-				if (obj_player->normal().dot(norm_vector) < 0.1) {
+				/*if (obj_player->normal().dot(norm_vector) < 0.1) {
+					Texture1 = true;
+				}*/
+				if (Point2D(obj_player->getRotation()).dot(norm_vector) < 0.1) {
 					Texture1 = true;
 				}
 			}
@@ -682,7 +765,7 @@ void Camera::hiddenObjectsRayCrossed(pair<Point2D, Point2D>& ray, CollisionInfo&
 	for (auto& el : W_world.objects()) {
 		Object2D* obj = el.second.get();
 
-		if (obj == caster) { continue; }
+		if (obj == caster || obj == nullptr) { continue; }
 
 		if (obj->cross(ray, edge, point, len)) {
 			dist = (point - ray.first).length();
@@ -711,7 +794,7 @@ void Camera::rayDraw(sf::RenderTarget& window, std::vector<RayCastStructure>& v_
 	
 	int index = 0;
 
-	auto it = find_if(v_raycast.begin(), v_raycast.end(), [](const RayCastStructure& obj) { return (obj.object != nullptr && obj.object->isMirror()); });
+	auto it = find_if(v_raycast.begin(), v_raycast.end(), [](const RayCastStructure& obj) { return (obj.object && obj.object->isMirror()); });
 	if (it != v_raycast.end()) {
 		for (int i = 0; i < v_raycast.size(); i++) {
 			if (v_raycast[i].object == nullptr) { continue; }
@@ -750,9 +833,9 @@ sf::Vector2f Camera::scaling(const sf::IntRect& size_before, const sf::Vector2u&
 	return sf::Vector2f((float)size_after.x / size_before.width, (float)size_after.y / size_before.height);
 }
 
-void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure k, int shift)
+void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure& k, int shift)
 {
-	if (k.object == nullptr) { return; }
+	if (k.object == nullptr || W_world.getObject2DName(k.object) == "") { return; }
 	// general
 	float height = static_cast<float>((DIST * SCALE / max(k.distance, (double)1)) * k.height);
 
@@ -777,8 +860,8 @@ void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure k, int
 
 	pol.setPoint(0, sf::Vector2f(0, h1));
 	pol.setPoint(1, sf::Vector2f(0, h1 + height));
-	pol.setPoint(2, sf::Vector2f(MONITOR_TILE, h1 + height));
-	pol.setPoint(3, sf::Vector2f(MONITOR_TILE, h1));
+	pol.setPoint(2, sf::Vector2f((float)MONITOR_TILE, h1 + height));
+	pol.setPoint(3, sf::Vector2f((float)MONITOR_TILE, h1));
 
 	pol.setPosition(static_cast<float>(shift * MONITOR_TILE), (float)(d_verticalShift));
 
@@ -849,6 +932,7 @@ void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure k, int
 
 void Camera::drawRunningWind(RenderTarget& window, int dt)
 {
+	if (!b_textured) { return; }
 	string str = WIND_TEXTURE;
 	size_t dot = str.find_last_of(".");
 	string type = str.substr(dot, str.length() - dot);
@@ -898,7 +982,7 @@ void Camera::draw_map(sf::RenderTarget& window)
 	window.draw(player);
 }
 
-void Camera::drawCameraView(sf::RenderTarget& window, int dt)
+void Camera::drawCameraView(sf::RenderTarget& window, int dt, pair<sf::Font, sf::Text::Style> font)
 {
 	// sky
 	if (b_textured) {
@@ -925,5 +1009,33 @@ void Camera::drawCameraView(sf::RenderTarget& window, int dt)
 	if (d_walk == 2) {
 		drawRunningWind(window, dt);
 	}
+
+	// hp
+
+	Text hp(to_string(health()).substr(0, to_string(health()).find('.') + 2), font.first, unsigned int(SCREEN_SIDE / 50.f));
+	RectangleShape rect(Vector2f(SCREEN_WIDTH / 6.f, SCREEN_HEIGHT / 30.f));
+
+	hp.setStyle(font.second);
+	hp.setOutlineThickness(1);
+	hp.setOutlineColor(Color(0, 0, 0));
+
+	hp.setPosition(SCREEN_WIDTH * 0.01f, SCREEN_HEIGHT * 0.98f - hp.getGlobalBounds().height * 3);
+	rect.setPosition(hp.getPosition().x, hp.getPosition().y + hp.getGlobalBounds().height + SCREEN_HEIGHT * 0.01f);
+
+	double ratio = health() / getStartHealth();
+	hp.setFillColor(Color(sf::Uint8((1 - ratio) * 255), sf::Uint8(ratio * 255), 0));
+	rect.setFillColor({ 0, 0, 0 });
+	
+	window.draw(rect);
+
+	rect.setPosition((Point2D(rect.getPosition()) + 5).to_sff());
+
+	Point2D rect_size = Point2D(rect.getSize()) - 10;
+	rect.setSize(Vector2f(float(rect_size.x * ratio), (float)rect_size.y));
+	rect.setFillColor(hp.getFillColor());
+
+	window.draw(rect);
+
+	window.draw(hp);
 }
 

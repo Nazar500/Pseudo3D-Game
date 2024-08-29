@@ -32,6 +32,16 @@ namespace Sockets {
 		return res;
 	}
 
+	bool find(const map<IData, shared_ptr<Camera>>& _arr, const IpAddress& _ip)
+	{
+		for (auto&& p : _arr) {
+			if (p.first.m_ip == _ip) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	Packet& operator << (Packet& packet, const Point2D& point) {
 		return packet << point.x << point.y;
 	}
@@ -39,4 +49,24 @@ namespace Sockets {
 	Packet& operator >> (Packet& packet, Point2D& point) {
 		return packet >> point.x >> point.y;
 	}
+
+	Packet& operator << (Packet& packet, const IpAddress& obj) {
+		return packet << obj.toString();
+	}
+
+	Packet& operator >> (Packet& packet, IpAddress& obj) {
+		string ipString = obj.toString();
+		packet >> ipString;
+		obj = IpAddress(ipString);
+		return packet;
+	}
+
+	Packet& operator << (Packet& packet, const IData& obj) {
+		return packet << obj.m_ip << obj.m_port << obj.m_errors;
+	}
+
+	Packet& operator >> (Packet& packet, IData& obj) {
+		return packet >> obj.m_ip >> obj.m_port >> obj.m_errors;
+	}
+
 }

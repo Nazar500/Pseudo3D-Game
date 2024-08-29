@@ -3,6 +3,14 @@ project(Pseudo3DGame)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# DEBUG in RELEASE
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG")
+
+add_compile_options("$<$<CONFIG:RELEASE>:/Zi>")
+add_link_options("$<$<CONFIG:RELEASE>:/DEBUG /OPT:REF /OPT:ICF>")
+
+
 file(GLOB_RECURSE FILES "Implementation/*.cpp" "Implementation/*.h")
 
 add_executable(Pseudo3DGame ${FILES} main.cpp)
