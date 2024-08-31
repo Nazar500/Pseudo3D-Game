@@ -11,6 +11,7 @@
 #include <fstream>
 
 using namespace std;
+using namespace Settings;
 
 string format_value(const double& value, const char& fill, const size_t& precision, const size_t& len) {
     ostringstream oss;
@@ -55,7 +56,14 @@ void updateCam(Camera* cam, vector<pair<string, bool>>& settings, double sens, b
         cam->setSensivity(sens);
 }
 
-void InitNet(unique_ptr<ServerUdp>& server, unique_ptr<ClientUdp>& client, World& world, shared_ptr<Camera>& camera, bool& isServer) {
+void clean_m_file(const std::string& filename) {
+    ofstream out(filename);
+
+    out << IpAddress::LocalHost << "\n";
+    out << 54000 << "\n";
+}
+
+void InitNet(unique_ptr<ServerUdp>& server, unique_ptr<ClientUdp>& client, World& world, shared_ptr<Camera>& camera, bool& isServer, int safe_counter = 0) {
     ifstream file(CONNECT_FILE, ifstream::in);
 
     IpAddress ip;
@@ -64,13 +72,24 @@ void InitNet(unique_ptr<ServerUdp>& server, unique_ptr<ClientUdp>& client, World
     if (DEBUG)
         cout << "Started Reading from File  ";
 
-    string temp;
+    string temp, temp1;
     if (file.is_open()) {
         getline(file, temp);
+        getline(file, temp1);
+        if ((temp == "" || temp == "\n") || (temp1 == "" || temp1 == "\n") && safe_counter < 10) {
+            file.close();
+            clean_m_file(CONNECT_FILE);
+            InitNet(server, client, world, camera, isServer, safe_counter+1);
+            return;
+        }
         ip = temp;
-
-        getline(file, temp);
-        port = (unsigned short)stoi(temp);
+        port = (unsigned short)stoi(temp1);
+    }
+    else {
+        file.close();
+        clean_m_file(CONNECT_FILE);
+        InitNet(server, client, world, camera, isServer, safe_counter + 1);
+        return;
     }
 
     file.close();
@@ -104,6 +123,8 @@ int main()
 
     srand((unsigned int)time(0));
 
+    loadSettings("Config.txt");
+
     ofstream log("log.txt");
     streambuf* old = nullptr;
 
@@ -116,7 +137,13 @@ int main()
     if (DEBUG)
         cout << "Started Loading Font ";
     Font font;
-    font.loadFromFile(FONT);
+    if (!font.loadFromFile(FONT)) {
+        #ifdef _WIN32
+            font.loadFromFile("C:Windows/Fonts/calibri.ttf");
+        #else
+            font.loadFromFile("usr/share/fonts/calibri.ttf");
+        #endif
+    }
 
     if (DEBUG)
         cout << "Ended Loading Font\n";
@@ -209,15 +236,15 @@ int main()
         window_size = { static_cast<int>(window.getSize().x), static_cast<int>(window.getSize().y) };
         window_rect = { window_position.x, window_position.y+30, window_size.x, window_size.y };
 
-        std::string title = "Pseudo3DEngine ";
+        //std::string title = "Pseudo3DEngine ";
 
-        // Title update
-        if (d_elapsedTime > 0) {
-            title += format_value((double)1 / d_elapsedTime, '0', 3, 3) + "fps.";
-        }
-        if (camera)
-            title += " x:" + std::to_string(camera->x()) + ", y:" + std::to_string(camera->y()) + ", health: " + std::to_string(camera->health()) + ", kills: " + std::to_string(camera->getKills()) + ", deaths: " + std::to_string(camera->getDeaths());
-        window.setTitle(title);
+        //// Title update
+        //if (d_elapsedTime > 0) {
+        //    title += format_value((double)1 / d_elapsedTime, '0', 3, 3) + "fps.";
+        //}
+        //if (camera)
+        //    title += " x:" + std::to_string(camera->x()) + ", y:" + std::to_string(camera->y()) + ", health: " + std::to_string(camera->health()) + ", kills: " + std::to_string(camera->getKills()) + ", deaths: " + std::to_string(camera->getDeaths());
+        //window.setTitle(title);
 
         if (b_serv) {
             if (online) {
@@ -291,6 +318,10 @@ int main()
                     cout << "Started Frame Processing" << " ";
 
                 camera->startFrameProcessing();
+                camera->endFrameProcessing();
+
+                if(DEBUG)
+                    cout << "Ended Frame Processing" << endl;
 
                 if (DEBUG)
                     cout << "Started Drawing" << " ";
@@ -298,12 +329,9 @@ int main()
                 if (DEBUG)
                     cout << "Ended Drawing" << endl;
 
-                camera->endFrameProcessing();
-
-                if (DEBUG) {
-                    cout << "Ended Frame Processing" << endl;
+                if (DEBUG)
                     cout << "Started Drawing World" << " ";
-                }
+                
 
                 if (camera->get2D_map()) {
                     world.draw(window);
@@ -362,7 +390,7 @@ int main()
         cout.rdbuf(old);
     log.close();
 
-    SetFileAttributes("log.txt", FILE_ATTRIBUTE_HIDDEN);
+    //SetFileAttributes("log.txt", FILE_ATTRIBUTE_HIDDEN);
 
     return 0;
 }

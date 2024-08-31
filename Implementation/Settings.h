@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef PSEUDO3DENGINE_SETTINGS_H
 #define PSEUDO3DENGINE_SETTINGS_H
 
@@ -10,194 +8,141 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <cmath>
 #include <filesystem>
+#include <fstream>
 #include <chrono>
 #include <cfenv>
 #include <windows.h>
 
-#define PI 3.1415926535897932384626433832795
-#define ET std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count()
+namespace Settings {
+	const double PI = 3.1415926535897932384626433832795;
+	const double ET = std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
 
-#define SCALE 40 //How much pixels = 1 unit of distance measure
-#define MAP_SCALE ((MIRROR_DEBUG) ? 3 : 10)
+	const bool LOG = true;
+	const bool DEBUG = true;
+	const bool CONSOLE = false;
+	const bool MIRROR_DEBUG = false;
+	const bool THREADED = true;
+	const bool NETWORK = true;
 
-#define SCALE_WINDOW 50
+	const int SCALE = 40; //How much pixels = 1 unit of distance measure
+	const int MAP_SCALE = ((MIRROR_DEBUG) ? 3 : 10);
 
-#define SIDE SCALE_WINDOW * SCALE
+	const int SCALE_WINDOW = 50;
 
-// SCREEN SIZE
-#define WIDTH 1920 // 1280
-#define HEIGHT 1080 // 720
+	const float SIDE = (float)SCALE_WINDOW * SCALE;
 
-#define SCREEN_WIDTH max(800, (int)WIDTH) //((WIDTH < 800) ? 800 : WIDTH) // 1280
-#define SCREEN_HEIGHT max(600, (int)HEIGHT) //((HEIGHT < 600) ? 600 : HEIGHT) // 720
-#define SCREEN_SIDE int((SCREEN_WIDTH + SCREEN_HEIGHT) / 2) // 720
-#define TITLE "SFML Pseudo3D"
+	// SCREEN SIZE
+	extern int WIDTH; //sf::VideoMode::getDesktopMode().width; // 1280
+	extern int HEIGHT; //sf::VideoMode::getDesktopMode().height; // 720
 
-// NETWORK
-#define NETWORK_VERSION 2U
-#define TIMEOUT_SECONDS 5
-#define WORLD_UPDATE_RATE 30
-#define RELIABLE_RETRY_TIME (1.0/20)
+	extern int SCREEN_WIDTH; //((WIDTH < 800) ? 800 : WIDTH) // 1280
+	extern int SCREEN_HEIGHT; //((HEIGHT < 600) ? 600 : HEIGHT) // 720
+	extern int SCREEN_SIDE; // 720
+	const std::string TITLE = "SFML Pseudo3D";
 
-// OBJECTS
-#define OUTLINE_THICKNESS 10
-#define OUTLINE_COLOR {255, 255, 255, 255}
-#define FILL_COLOR {255, 174, 174, 255}
+	// NETWORK
+	const unsigned int NETWORK_VERSION = 2U;
+	const int TIMEOUT_SECONDS = 5;
+	const int WORLD_UPDATE_RATE = 30;
+	const double RELIABLE_RETRY_TIME = (1.0 / 20);
 
-#define CIRCLE_CONVEX_NUMBER 50
+	// OBJECTS
+	const int OUTLINE_THICKNESS = 10;
+	const sf::Color OUTLINE_COLOR = { 255, 255, 255, 255 };
+	const sf::Color FILL_COLOR = { 255, 174, 174, 255 };
 
-// CAMERA
-#define OUTLINE_CAMERA_THICKNESS 1
-#define OUTLINE_CAMERA_COLOR {255, 255, 255, 255}
-#define FILL_CAMERA_COLOR {255, 67, 67, 255}
-#define RADIUS_CAMERA SCALE * 2
-#define CONVEX_NUMBER int(DISTANCES_SEGMENTS / 10.f)
-#define FILED_OF_VEW_COLOR {255, 189, 51, 0}
-#define FILED_OF_VEW_OUTLINE_COLOR {0, 0, 0, 255}
-#define RED_COLOR {255, 0, 0}
+	const int CIRCLE_CONVEX_NUMBER = 50;
 
-#define FOV PI / 2
-#define CORRECTION 0
+	// CAMERA
+	const int DIS_SEG_FOR_BOTS = 8; // How much vertical sectors we use in ray cast
+	extern int DISTANCES_SEGMENTS; // How much vertical sectors we use in ray cast
+	const int FLOOR_SEGMENT_SIZE = 8;
 
-// FOR COLLISION DETECTION
-#define COLLISION_DISTANCE 80
-#define COLLISION_AREA 400
-#define COLLISION_SEGMENTS (int)(max((DISTANCES_SEGMENTS / 50.), 1.))
-#define HIDDEN_SEGMENTS (int)(COLLISION_SEGMENTS * (2 * PI - d_fieldOfView) / (2 * PI))
-#define SHOWN_SEGMENTS COLLISION_SEGMENTS - (int)(COLLISION_SEGMENTS * (2 * PI - d_fieldOfView) / (2 * PI))
+	const int OUTLINE_CAMERA_THICKNESS = 1;
+	const sf::Color OUTLINE_CAMERA_COLOR = { 255, 255, 255, 255 };
+	const sf::Color FILL_CAMERA_COLOR = { 255, 67, 67, 255 };
+	const double RADIUS_CAMERA = SCALE * 2;
+	extern int CONVEX_NUMBER;
+	const sf::Color FILED_OF_VEW_COLOR = { 255, 189, 51, 0 };
+	const sf::Color FILED_OF_VEW_OUTLINE_COLOR = { 0, 0, 0, 255 };
+	const sf::Color RED_COLOR = { 255, 0, 0 };
 
-#define OPTICAL_HEIGHT 100
+	const double FOV = PI / 2;
+	const bool CORRECTION = false;
 
-//RENDER
-#define FILL_RENDER_COLOR {255, 255, 255, 255}
-#define FOG_SEGMENTS 32
-#define FOG_INTENSITY 0.83
+	// FOR COLLISION DETECTION
+	const int COLLISION_DISTANCE = 80;
+	const int COLLISION_AREA = 400;
+	const int COLLISION_SEGMENTS = 30; //(int)(std::max((DISTANCES_SEGMENTS / 50.), 1.));
+	const int HIDDEN_SEGMENTS = (int)(COLLISION_SEGMENTS * (2 * PI - FOV) / (2 * PI));
+	const int SHOWN_SEGMENTS = COLLISION_SEGMENTS - (int)(COLLISION_SEGMENTS * (2 * PI - FOV) / (2 * PI));
 
-#define LOG true
-#define DEBUG true
-#define CONSOLE false
-#define MIRROR_DEBUG false
-#define THREADED true
-#define NETWORK true
-//#define PLAYERS_FLAT true
+	const int OPTICAL_HEIGHT = 100;
 
-#define DIS_SEG_FOR_BOTS 8 // How much vertical sectors we use in ray cast
-#define DISTANCES_SEGMENTS int(SCREEN_WIDTH / 1.f) // How much vertical sectors we use in ray cast
-#define FLOOR_SEGMENT_SIZE 8
+	//RENDER
+	const sf::Color FILL_RENDER_COLOR = { 255, 255, 255, 255 };
+	const int FOG_SEGMENTS = 32;
+	const double FOG_INTENSITY = 0.83;
 
-#define FPS 60
-#define MONITOR_TILE (SCREEN_WIDTH / DISTANCES_SEGMENTS)
-#define DIST /*(FOV < PI-0.1) ? */DISTANCES_SEGMENTS / (tan(FOV / 2) * 2) * 10 * FOV / (PI / 2) * SCREEN_SIDE / 1000/* : DISTANCES_SEGMENTS * 3*/
+	extern int FPS;
+	extern int MONITOR_TILE;
+	extern double DIST;
 
-#define OUTLINE_SEGMENTS false
-#define OUTLINE_SEGMENTS_COLOR { 0, 0, 0, 255 }
+	const bool OUTLINE_SEGMENTS = false;
+	const sf::Color OUTLINE_SEGMENTS_COLOR = { 0, 0, 0, 255 };
 
-//BACKGROUND
-#define OUTLINE_BACK_THICKNESS 5
-#define OUTLINE_BACK_COLOR {255, 255, 255, 255}
-#define FILL_BACK_COLOR {255, 255, 255, 255}
+	//BACKGROUND
+	const int OUTLINE_BACK_THICKNESS = 5;
+	const sf::Color OUTLINE_BACK_COLOR = { 255, 255, 255, 255 };
+	const sf::Color FILL_BACK_COLOR = { 255, 255, 255, 255 };
 
-//TEXTURES
+	//TEXTURES
 
-inline std::string getBaseName(const std::string& path) {
-	size_t slash1 = path.find_last_of("/\\");
-	size_t slash2 = path.find_last_of("/\\", slash1 - 1);
+	void loadSettings(const std::string& filename);
+	void clean_file(const std::string& filename);
+	void updateSettings();
 
-	if (slash2 == std::string::npos) {
-		slash2 = 0;
-	}
-	else {
-		slash2 += 1;
-	}
-	return path.substr(slash2, slash1 - slash2);
-}
+	std::string getBaseName(const std::string& path);
 
-#define BUILDED getBaseName(std::filesystem::current_path().string()) == "build"
+	const bool BUILDED = getBaseName(std::filesystem::current_path().string()) == "build";
 
-#define FONT BUILDED ? "../../../Fonts/CascadiaMono.ttf" : "Fonts/CascadiaMono.ttf"
+	const std::string FONT = BUILDED ? "../../../Fonts/CascadiaMono.ttf" : "Fonts/CascadiaMono.ttf";
 
-#define MAIN_TEXTURE BUILDED ? "../../../Textures/TroubleShooting/without_texture.png" : "Textures/TroubleShooting/without_texture.png"
-#define BALDI BUILDED ? "../../../Textures/Heroes/Baldi.png" : "Textures/Heroes/Baldi.png"
-#define SKIN BUILDED ? "../../../Textures/Heroes/DoomGuy.png" : "Textures/Heroes/DoomGuy.png"
-#define SKIN1 BUILDED ? "../../../Textures/Heroes/DoomGuy(1).png" : "Textures/Heroes/DoomGuy(1).png"
+	const std::string MAIN_TEXTURE = BUILDED ? "../../../Textures/TroubleShooting/without_texture.png" : "Textures/TroubleShooting/without_texture.png";
+	const std::string BALDI = BUILDED ? "../../../Textures/Heroes/Baldi.png" : "Textures/Heroes/Baldi.png";
+	const std::string SKIN = BUILDED ? "../../../Textures/Heroes/DoomGuy.png" : "Textures/Heroes/DoomGuy.png";
+	const std::string SKIN1 = BUILDED ? "../../../Textures/Heroes/DoomGuy(1).png" : "Textures/Heroes/DoomGuy(1).png";
 
-#define SKY_TEXTURE BUILDED ? "../../../Textures/Backgrounds/back.jpg" : "Textures/Backgrounds/back.jpg"
-#define WALL_TEXTURE BUILDED ? "../../../Textures/Walls/brickWall.png" : "Textures/Walls/brickWall.png"
-#define WALL_TEXTURE1 BUILDED ? "../../../Textures/Walls/wall_12.jpg" : "Textures/Walls/wall_12.jpg"
-#define WALL_TEXTURE2 BUILDED ? "../../../Textures/Walls/minecraft.jpg" : "Textures/Walls/minecraft.jpg"
-#define COLUMN_TEXTURE BUILDED ? "../../../Textures/Walls/column1.jpg" : "Textures/Walls/column1.jpg"
+	const std::string SKY_TEXTURE = BUILDED ? "../../../Textures/Backgrounds/back.jpg" : "Textures/Backgrounds/back.jpg";
+	const std::string WALL_TEXTURE = BUILDED ? "../../../Textures/Walls/brickWall.png" : "Textures/Walls/brickWall.png";
+	const std::string WALL_TEXTURE1 = BUILDED ? "../../../Textures/Walls/wall_12.jpg" : "Textures/Walls/wall_12.jpg";
+	const std::string WALL_TEXTURE2 = BUILDED ? "../../../Textures/Walls/minecraft.jpg" : "Textures/Walls/minecraft.jpg";
+	const std::string COLUMN_TEXTURE = BUILDED ? "../../../Textures/Walls/column1.jpg" : "Textures/Walls/column1.jpg";
 
-#define WIND_TEXTURE BUILDED ? "../../../Textures/BackGrounds/wind.png" : "Textures/BackGrounds/wind.png"
-#define IMAG_TEXTURES_OFF BUILDED ? "../../../Textures/Backgrounds/Textures_off.png" : "Textures/Backgrounds/Textures_off.png"
-#define IMAG_MIRRORS BUILDED ? "../../../Textures/Backgrounds/Mirrors.png" : "Textures/Backgrounds/Mirrors.png"
-#define IMAG_MAP BUILDED ? "../../../Textures/Backgrounds/Map.png" : "Textures/Backgrounds/Map.png"
-#define IMAG_INSRUCTION BUILDED ?  "../../../Textures/Walls/Instruction.png" : "Textures/Walls/Instruction.png"
+	const std::string WIND_TEXTURE = BUILDED ? "../../../Textures/BackGrounds/wind.png" : "Textures/BackGrounds/wind.png";
+	const std::string IMAG_TEXTURES_OFF = BUILDED ? "../../../Textures/Backgrounds/Textures_off.png" : "Textures/Backgrounds/Textures_off.png";
+	const std::string IMAG_MIRRORS = BUILDED ? "../../../Textures/Backgrounds/Mirrors.png" : "Textures/Backgrounds/Mirrors.png";
+	const std::string IMAG_MAP = BUILDED ? "../../../Textures/Backgrounds/Map.png" : "Textures/Backgrounds/Map.png";
+	const std::string IMAG_INSRUCTION = BUILDED ? "../../../Textures/Walls/Instruction.png" : "Textures/Walls/Instruction.png";
 
-#define WEAPON_ARM_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/Arm.png" : "Textures/Weapons/Shotgun/Arm.png"
-#define WEAPON_TRUNK_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/Trunk.png" : "Textures/Weapons/Shotgun/Trunk.png"
-#define WEAPON_FLASH_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/Flash.png" : "Textures/Weapons/Shotgun/Flash.png"
-#define WEAPON_AIM_TEXTURE BUILDED ? "../../../Textures/Weapons/Shotgun/aim.png" : "Textures/Weapons/Shotgun/aim.png"
+	const std::string WEAPON_ARM_TEXTURE = BUILDED ? "../../../Textures/Weapons/Shotgun/Arm.png" : "Textures/Weapons/Shotgun/Arm.png";
+	const std::string WEAPON_TRUNK_TEXTURE = BUILDED ? "../../../Textures/Weapons/Shotgun/Trunk.png" : "Textures/Weapons/Shotgun/Trunk.png";
+	const std::string WEAPON_FLASH_TEXTURE = BUILDED ? "../../../Textures/Weapons/Shotgun/Flash.png" : "Textures/Weapons/Shotgun/Flash.png";
+	const std::string WEAPON_AIM_TEXTURE = BUILDED ? "../../../Textures/Weapons/Shotgun/aim.png" : "Textures/Weapons/Shotgun/aim.png";
 
-#define MENU_MUSIC BUILDED ? "../../../Sounds/UnrealSuperHero3.ogg" : "Sounds/UnrealSuperHero3.ogg"
-#define WALK_SOUND BUILDED ? "../../../Sounds/Walking_sounds.wav" : "Sounds/Walking_sounds.wav"
-#define BACK_GROUND_SOUND BUILDED ? "../../../Sounds/Nature_sounds.wav" : "Sounds/Nature_sounds.wav"
-#define SHOTGUN_SHOT BUILDED ? "../../../Sounds/Shotgun_shot.wav" : "Sounds/Shotgun_shot.wav"
-#define SHOTGUN_RELOAD BUILDED ? "../../../Sounds/Shotgun_reload.wav" : "Sounds/Shotgun_reload.wav"
+	const std::string MENU_MUSIC = BUILDED ? "../../../Sounds/UnrealSuperHero3.ogg" : "Sounds/UnrealSuperHero3.ogg";
+	const std::string WALK_SOUND = BUILDED ? "../../../Sounds/Walking_sounds.wav" : "Sounds/Walking_sounds.wav";
+	const std::string BACK_GROUND_SOUND = BUILDED ? "../../../Sounds/Nature_sounds.wav" : "Sounds/Nature_sounds.wav";
+	const std::string SHOTGUN_SHOT = BUILDED ? "../../../Sounds/Shotgun_shot.wav" : "Sounds/Shotgun_shot.wav";
+	const std::string SHOTGUN_RELOAD = BUILDED ? "../../../Sounds/Shotgun_reload.wav" : "Sounds/Shotgun_reload.wav";
 
-#define CONNECT_FILE  BUILDED ? "../../../Connect.txt" : "Connect.txt"
+	const std::string CONNECT_FILE = BUILDED ? "../../../Connect.txt" : "Connect.txt";
 
-inline bool checkptr(sf::Texture& obj, sf::Texture* ptr) {
-	if (ptr != nullptr) {
-		obj = *ptr;
-		return true;
-	}
-	
-	const std::string path = BUILDED ? "../../../Textures/TroubleShooting/without_texture.png" : "Textures/TroubleShooting/without_texture.png";
-	if (!std::filesystem::exists(path)) {
-		sf::RenderTexture surface;
-		unsigned int width = 800, height = 600;
-		surface.create(width, height);
-
-		sf::Font font;
-		if (!font.loadFromFile("C:/Windows/Fonts/arialbd.ttf")) {
-			std::cerr << "Error with loading a font!!!" << std::endl;
-		}
-
-		sf::Text text("Without Texture", font, 100);
-		text.setFillColor(sf::Color(255, 0, 0, 255));
-		sf::FloatRect text_bounds = text.getLocalBounds();
-		text.setPosition(sf::Vector2f((width - text_bounds.width) / 2.f, height / 2.f - text.getCharacterSize() / 2.f));
-
-		surface.clear(sf::Color(200, 200, 200));
-		surface.draw(text);
-		surface.display();
-
-		sf::Texture rendered_texture = surface.getTexture();
-		sf::Image rendered_image = rendered_texture.copyToImage();
-		rendered_image.saveToFile(path);
-
-		obj = rendered_texture;
-	}
-	else {
-		sf::Texture texture;
-		texture.loadFromFile(path);
-		obj = texture;
-	}
-	
-	return false;
-}
-
-inline bool checkptr(sf::Sound& obj, sf::SoundBuffer* ptr) {
-	if (ptr) {
-		obj.setBuffer(*ptr);
-
-		return true;
-	}
-	
-	obj.setBuffer(sf::SoundBuffer());
-	return false;
+	bool checkptr(sf::Texture& obj, sf::Texture* ptr);
+	bool checkptr(sf::Sound& obj, sf::SoundBuffer* ptr);
 }
 
 #endif //PSEUDO3DENGINE_SETTINGS_H

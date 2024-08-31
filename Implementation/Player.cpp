@@ -1,5 +1,7 @@
 #include "PLayer.h"
 
+using namespace Settings;
+
 void Player::oneMoreKill()
 {
 	++i_kills;

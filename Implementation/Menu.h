@@ -8,12 +8,10 @@
 
 #include <sstream>
 
-using namespace sf;
-
 enum Tabs {
 	Quit,
 	Play,
-	Settings,
+	Setting,
 	About,
 	Main
 };
@@ -21,7 +19,7 @@ enum Tabs {
 class Menu {
 private:
 	unsigned char size;
-	Text::Style style;
+	sf::Text::Style style;
 
 	int left;
 	int text_width;
@@ -30,28 +28,28 @@ private:
 	std::vector<pair<string, bool>> settingTabs;
 
 	double sensivity = .002, maxSensivity = .02, minSensivity = .0;
-	IpAddress localIp;
-	IpAddress globalIp;
+	sf::IpAddress localIp;
+	sf::IpAddress globalIp;
 
-	Font& f;
-	Vector2i mouse;
+	sf::Font& f;
+	sf::Vector2i mouse;
 	bool was_released;
 public:
-	explicit Menu(Font& font, Text::Style style, unsigned char size);
+	explicit Menu(sf::Font& font, sf::Text::Style style, unsigned char size);
 
-	void update(RenderTarget& sc, Vector2i mouse_position, IpAddress global_ip);
+	void update(sf::RenderTarget& sc, sf::Vector2i mouse_position, sf::IpAddress global_ip);
 	void to_main();
-	void draw(RenderTarget& sc);
+	void draw(sf::RenderTarget& sc);
 
-	static Color oppositeColor(Color col);
+	static sf::Color oppositeColor(sf::Color col);
 	static std::vector<std::string> split(const std::string& str, const char& delimeter = ' ');
 	static string rot(const std::string& str, unsigned char& count);
 	static string strip(const string& a);
 
-	void draw_settings(RenderTarget& sc);
-	void draw_about(RenderTarget& sc) const;
-	void draw_slider(RenderTarget& sc, const Vector2f& pos, int width, int height);
-	void draw_switcher(RenderTarget& sc, const Vector2f& pos, int width, int height, int i);
+	void draw_settings(sf::RenderTarget& sc);
+	void draw_about(sf::RenderTarget& sc) const;
+	void draw_slider(sf::RenderTarget& sc, const sf::Vector2f& pos, int width, int height);
+	void draw_switcher(sf::RenderTarget& sc, const sf::Vector2f& pos, int width, int height, int i);
 
 	Tabs getState() const;
 	double getSensivity() const;

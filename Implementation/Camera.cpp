@@ -1,5 +1,7 @@
 #include "Camera.h"
 
+using namespace Settings;
+
 Camera::Camera(World& world, const Point2D& position, double vPos, double height, double health, const std::string& texture, const std::string& texture1, double fieldOfView, double angle, double eyesHeight, double depth, double walkSpeed, double jumpSpeed, double viewSpeed, int reflection_limit)
 	: W_world(world), d_eyesHeight(eyesHeight), d_depth(depth), d_walkSpeed(walkSpeed), d_jumpSpeed(jumpSpeed), d_viewSpeed(viewSpeed), Player(position, height, health, texture, texture1), d_direction(angle), d_reflection_limit(reflection_limit), b_online(NETWORK), b_shoot(false)
 {
@@ -933,6 +935,7 @@ void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure& k, in
 void Camera::drawRunningWind(RenderTarget& window, int dt)
 {
 	if (!b_textured) { return; }
+
 	string str = WIND_TEXTURE;
 	size_t dot = str.find_last_of(".");
 	string type = str.substr(dot, str.length() - dot);
@@ -941,11 +944,10 @@ void Camera::drawRunningWind(RenderTarget& window, int dt)
 
 	Sprite wind;
 
-	/*Texture texture;
+	Texture texture;
 	checkptr(texture, ResourceManager::loadTexture(str));
-	wind.setTexture(texture, true);*/
 
-	wind.setTexture(*ResourceManager::loadTexture(str), true);
+	wind.setTexture(texture, true);
 	wind.setColor({ 255, 255, 255, 16 });
 
 	Vector2u wind_size = wind.getTexture()->getSize();
@@ -1002,30 +1004,52 @@ void Camera::drawCameraView(sf::RenderTarget& window, int dt, pair<sf::Font, sf:
 	}
 
 	// weapon
-	unique_lock<mutex> lk(renderM);
+	if (weapon.getTextured() != b_textured)
+		weapon.setTextured(b_textured);
 	weapon.draw(window);
-	lk.unlock();
 
 	if (d_walk == 2) {
 		drawRunningWind(window, dt);
 	}
 
-	// hp
+	// text
 
 	Text hp(to_string(health()).substr(0, to_string(health()).find('.') + 2), font.first, unsigned int(SCREEN_SIDE / 50.f));
+	Text kills("K: " + to_string(getKills()), font.first, unsigned int(SCREEN_SIDE / 50.f));
+	Text deaths("D: " + to_string(getDeaths()), font.first, unsigned int(SCREEN_SIDE / 50.f));
+	Text fps(to_string(int(1000. / dt)), font.first, unsigned int(SCREEN_SIDE / 100.f));
+
 	RectangleShape rect(Vector2f(SCREEN_WIDTH / 6.f, SCREEN_HEIGHT / 30.f));
 
 	hp.setStyle(font.second);
 	hp.setOutlineThickness(1);
 	hp.setOutlineColor(Color(0, 0, 0));
+	kills.setStyle(font.second);
+	kills.setOutlineThickness(1);
+	kills.setOutlineColor(Color(0, 0, 0));
+	deaths.setStyle(font.second);
+	deaths.setOutlineThickness(1);
+	deaths.setOutlineColor(Color(0, 0, 0));
+	fps.setStyle(font.second);
+	fps.setOutlineThickness(2);
+	fps.setOutlineColor(Color(255, 255, 255));
 
 	hp.setPosition(SCREEN_WIDTH * 0.01f, SCREEN_HEIGHT * 0.98f - hp.getGlobalBounds().height * 3);
+	kills.setPosition(hp.getPosition().x + hp.getLocalBounds().width + SCREEN_WIDTH * 0.01f, hp.getPosition().y);
+	deaths.setPosition(kills.getPosition().x + kills.getLocalBounds().width + SCREEN_WIDTH * 0.02f, hp.getPosition().y);
+	fps.setPosition(SCREEN_WIDTH - fps.getLocalBounds().width - SCREEN_WIDTH * 0.005f, SCREEN_HEIGHT * 0.005f);
+
 	rect.setPosition(hp.getPosition().x, hp.getPosition().y + hp.getGlobalBounds().height + SCREEN_HEIGHT * 0.01f);
+	rect.setSize(Vector2f(deaths.getPosition().x + deaths.getLocalBounds().width - rect.getPosition().x + SCREEN_WIDTH * 0.005f, rect.getSize().y));
 
 	double ratio = health() / getStartHealth();
 	hp.setFillColor(Color(sf::Uint8((1 - ratio) * 255), sf::Uint8(ratio * 255), 0));
+	kills.setFillColor(Color(255, 255, 255));
+	deaths.setFillColor(Color(255, 255, 255));
+	fps.setFillColor(Color(150, 0, 0));
+
 	rect.setFillColor({ 0, 0, 0 });
-	
+
 	window.draw(rect);
 
 	rect.setPosition((Point2D(rect.getPosition()) + 5).to_sff());
@@ -1037,5 +1061,8 @@ void Camera::drawCameraView(sf::RenderTarget& window, int dt, pair<sf::Font, sf:
 	window.draw(rect);
 
 	window.draw(hp);
+	window.draw(kills);
+	window.draw(deaths);
+	window.draw(fps);
 }
 

@@ -17,7 +17,7 @@ protected:
 	Point2D loc_middle() const override;
 
 public:
-	explicit Circle2D(double radius, Point2D position, double height = 1., const std::string& TEXTURE = COLUMN_TEXTURE, int conevexNum = CIRCLE_CONVEX_NUMBER);
+	explicit Circle2D(double radius, Point2D position, double height = 1., const std::string& TEXTURE = Settings::COLUMN_TEXTURE, int conevexNum = Settings::CIRCLE_CONVEX_NUMBER);
 	Circle2D() = default;
 
 	ObjectType type() override;

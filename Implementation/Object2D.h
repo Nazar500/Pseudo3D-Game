@@ -24,7 +24,7 @@ protected:
 
 public:
 	Object2D(const Object2D& object2D);
-	explicit Object2D(Point2D pos, std::vector<Point2D> points, double height = 1., bool mirror = false, const std::string& TEXTURE = WALL_TEXTURE, bool all_texture=false);
+	explicit Object2D(Point2D pos, std::vector<Point2D> points, double height = 1., bool mirror = false, const std::string& TEXTURE = Settings::WALL_TEXTURE, bool all_texture=false);
 
 	void draw(sf::RenderTarget& window) override;
 	const sf::Texture& loadTexture() const;

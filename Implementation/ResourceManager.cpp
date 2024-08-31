@@ -1,5 +1,7 @@
 #include "ResourceManager.h"
 
+using namespace Settings;
+
 namespace ResourceManager {
 	bool checkPath(const string& path)
 	{

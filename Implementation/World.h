@@ -21,7 +21,7 @@ private:
 	sf::Texture T_floor_texture;
 
 public: 
-	World(const std::string& sky_texture = SKY_TEXTURE);
+	World(const std::string& sky_texture = Settings::SKY_TEXTURE);
 
 	bool addObject2D(const std::shared_ptr<Object2D>& object, const std::string& name);
 	bool removeObject2D(const std::string& name);

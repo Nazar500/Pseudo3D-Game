@@ -1,5 +1,7 @@
 #include "Circle2D.h"
 
+using namespace Settings;
+
 Circle2D::Circle2D(double radius, Point2D position, double height, const std::string& TEXTURE, int convexNum) : d_radius(radius), Object2D(position, {}, height, 0, TEXTURE)
 {
     for (int i = 0; i < convexNum; i++) {

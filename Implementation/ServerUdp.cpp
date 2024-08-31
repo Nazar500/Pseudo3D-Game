@@ -1,5 +1,7 @@
 #include "ServerUdp.h"
 
+using namespace Settings;
+
 bool ServerUdp::check_error(const Socket::Status& status, const IpAddress& ip) {
 	if (_players.count(ip)) {
 		if (status != Socket::Status::Done) {

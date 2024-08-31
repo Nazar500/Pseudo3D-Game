@@ -1,8 +1,12 @@
 #include "Weapon.h"
 
+using namespace Settings;
+using namespace sf;
+
 Weapon::Weapon(double damage, double reload_time, int ammo, double recoil, const Point2D& offset, const Point2D& reload_offset, const Point2D& flash_offset, double speed, double raise, const string& s_reload, const string& s_shot, const std::string& arm_p, const std::string& trunk_p, const std::string& flash_p) : w_damage(damage), w_reload_t(reload_time/0.4), ammo(ammo), offset(offset), w_speed(speed), w_raise(raise), w_recoil(recoil*100), r_offset(reload_offset), f_offset(flash_offset)
 {
-
+	bool without = false;
+	if (!checkptr(arm_t, ResourceManager::loadTexture(arm_p))) { without = true; }
 	checkptr(arm_t, ResourceManager::loadTexture(arm_p));
 	checkptr(trunk_t, ResourceManager::loadTexture(trunk_p));
 	checkptr(flash_t, ResourceManager::loadTexture(flash_p));
@@ -26,6 +30,13 @@ Weapon::Weapon(double damage, double reload_time, int ammo, double recoil, const
 
 	arm.setScale((Point2D(1.5f, 1.5f) * (SCREEN_SIDE / 1000.f)).to_sff());
 	trunk.setScale((Point2D(1.5f, 1.5f) * (SCREEN_SIDE / 1000.f)).to_sff());
+
+	if (without) {
+		aim.setScale(Vector2f(0.1f, 0.1f));
+		flash.setScale(Vector2f(0.5f, 0.5f));
+		arm.setScale(Vector2f(0.5f, 0.5f));
+		trunk.setScale(Vector2f(0.5f, 0.5f));
+	}
 
 	// sound
 }
@@ -68,6 +79,16 @@ bool Weapon::setReloadSound(const string& filename)
 bool Weapon::setShotSound(const string& filename)
 {
 	return checkptr(shot, ResourceManager::loadSound(filename));
+}
+
+void Weapon::setTextured(bool active)
+{
+	b_textured = active;
+}
+
+bool Weapon::getTextured() const
+{
+	return b_textured;
 }
 
 bool Weapon::shoot()
@@ -162,6 +183,7 @@ void Weapon::draw(sf::RenderTarget& window)
 	}
 
 	// draw
+	if (!b_textured) { return; }
 	window.draw(trunk);
 	window.draw(arm);
 	window.draw(aim);

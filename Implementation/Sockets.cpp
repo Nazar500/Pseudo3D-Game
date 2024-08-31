@@ -1,5 +1,7 @@
 #include "Sockets.h"
 
+using namespace Settings;
+
 namespace Sockets {
 	bool check_sock(Socket::Status a, bool error, const string& str) {
 		if (a != Socket::Done) {

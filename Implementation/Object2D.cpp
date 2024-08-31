@@ -1,5 +1,7 @@
 #include "Object2D.h"
 
+using namespace Settings;
+
 Object2D::Object2D(const Object2D& object2D)
 {
 	this->p_pos.x = object2D.p_pos.x;

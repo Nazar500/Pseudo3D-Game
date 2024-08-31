@@ -1,5 +1,9 @@
 #include "Menu.h"
 
+using namespace Settings;
+using namespace sf;
+using namespace std;
+
 Menu::Menu(Font& font, Text::Style style, unsigned char size) : f(font), size(size), style(style), was_released(true)
 {
 	localIp = IpAddress::getLocalAddress();
@@ -40,7 +44,7 @@ void Menu::draw(RenderTarget& sc)
 	switch (tab) {
 	case Tabs::Play:
 		break;
-	case Tabs::Settings:
+	case Tabs::Setting:
 		draw_settings(sc);
 		break;
 	case Tabs::About:
@@ -241,7 +245,7 @@ void Menu::draw_settings(RenderTarget& sc)
 			sc.draw(frame_ip);
 
 			frame_ip.setPosition(ip_pos.x, ip_pos.y + frame_ip.getLocalBounds().height + g_ip.getCharacterSize() * .08f + SCREEN_HEIGHT / 160.f);
-			frame_ip.setSize(Vector2f(bounds_g_ip.x + SCREEN_WIDTH / 160.f, bounds_g_ip.y + g_ip.getCharacterSize() * .25f));
+			frame_ip.setSize(Vector2f(bounds_g_ip.x + SCREEN_WIDTH / 160.f, bounds_g_ip.y + g_ip.getCharacterSize() * .33f));
 			g_ip.setPosition(frame_ip.getPosition().x + SCREEN_WIDTH / 320.f, frame_ip.getPosition().y);
 
 			if (globalIp != IpAddress::None) {

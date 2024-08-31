@@ -1,6 +1,8 @@
 #include "World.h"
 #include "ResourceManager.h"
 
+using namespace Settings;
+
 World::World(const std::string& sky_texture)
 {
 	checkptr(T_sky_texture, ResourceManager::loadTexture(sky_texture));

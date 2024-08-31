@@ -1,5 +1,7 @@
 #include "Point2D.h"
 
+using namespace Settings;
+
 Point2D::Point2D() {
     this->x = 0.; this->y = 0.;
 }

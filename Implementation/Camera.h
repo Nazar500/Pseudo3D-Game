@@ -83,7 +83,7 @@ struct RayCastStructure
 
 struct CollisionInfo
 {
-	CollisionInfo(Point2D d_point = {}, pair<Point2D, Point2D> d_wall = { {}, {} }, double d_dist = COLLISION_AREA, double d_height = 0, Object2D* d_obj = nullptr) {
+	CollisionInfo(Point2D d_point = {}, pair<Point2D, Point2D> d_wall = { {}, {} }, double d_dist = Settings::COLLISION_AREA, double d_height = 0, Object2D* d_obj = nullptr) {
 		point = d_point;
 		edge = d_wall;
 		distance = d_dist;
@@ -103,8 +103,8 @@ struct FrameImportantInfo
 	std::vector<std::vector<RayCastStructure>> distances;
 	std::vector<CollisionInfo> collisions;
 	Point2D position;
-	double direction;
-	double height;
+	double direction = Settings::PI;
+	double height = 1.;
 };
 
 
@@ -207,7 +207,7 @@ protected:
 	void recoil_shift(Point2D vector);
 
 public:
-	explicit Camera(World& world, const Point2D& position, double vPos = 0, double height = 0.6, double health = 100., const std::string& texture = SKIN, const std::string& texture1 = SKIN1, double fieldOfView = FOV, double angle = FOV, double eyesHeight = 1.f, double depth = 9000, double walkSpeed = 400, double jumpSpeed = 2.75, double viewSpeed = .002, int reflection_limit = 20);
+	explicit Camera(World& world, const Point2D& position, double vPos = 0, double height = 0.6, double health = 100., const std::string& texture = Settings::SKIN, const std::string& texture1 = Settings::SKIN1, double fieldOfView = Settings::FOV, double angle = Settings::FOV, double eyesHeight = 1.f, double depth = 9000, double walkSpeed = 400, double jumpSpeed = 2.75, double viewSpeed = .002, int reflection_limit = 20);
 	//Camera(const Camera& other);
 	~Camera(); // finishing threads
 

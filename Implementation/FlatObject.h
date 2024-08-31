@@ -14,7 +14,7 @@ private:
 	double f_scale;
 
 public:
-	explicit FlatObject(Point2D pos, string f_texture_path = BALDI, double scale_x = 1., double height = 1.);
+	explicit FlatObject(Point2D pos, string f_texture_path = Settings::BALDI, double scale_x = 1., double height = 1.);
 	FlatObject(FlatObject& other);
 
 	void draw(sf::RenderTarget& window) override;

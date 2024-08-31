@@ -15,7 +15,7 @@ protected:
 
 	int i_kills = 0, i_deaths = 0;
 public:
-	explicit Player(const Point2D& position, double height = 0.6, double health = 100, const std::string& TEXTURE = SKIN, const std::string& TEXTURE1 = SKIN1);
+	explicit Player(const Point2D& position, double height = 0.6, double health = 100, const std::string& TEXTURE = Settings::SKIN, const std::string& TEXTURE1 = Settings::SKIN1);
 	Player(const Player& player);
 
 	void setPosition(const Point2D& pos);

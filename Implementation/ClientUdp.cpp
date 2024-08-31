@@ -1,5 +1,7 @@
 #include "ClientUdp.h"
 
+using namespace Settings;
+
 bool ClientUdp::check_errors(const Socket::Status& status)
 {
 	if (status != Socket::Status::Done) {
