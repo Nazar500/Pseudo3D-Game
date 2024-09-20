@@ -111,7 +111,7 @@ void ServerUdp::process()
 
 	switch ((MsgType)type) {
 	case MsgType::Connect:
-		temp_pos = { _localPlayer->getStartPos() + Point2D(((int)_players.size() % 2) ? 400. : -400., 0) * ((int)_players.size() + 1) };
+		temp_pos = { _localPlayer->getStartPos() + Point2D((static_cast<int>(_players.size() % 2) ? 400. : -400., 0)) * (static_cast<int>(_players.size() + 1)) };
 		pos = Point2D(temp_pos - _localPlayer->getStartPos()).normalized();
 		dir = Point2D(pos.y, -pos.x).vect2Rad();
 		send_packet << MsgType::WorldUpdate << _address.toString() << temp_pos << dir;

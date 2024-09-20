@@ -118,9 +118,11 @@ void Camera::SoundsCorrection()
 }
 
  void Camera::setThreadAffinity(std::thread& thread, int core_id) {
- 	HANDLE handle = thread.native_handle();
- 	DWORD_PTR mask = static_cast<DWORD_PTR>(1) << core_id;
- 	SetThreadAffinityMask(handle, mask);
+	#ifdef _WIN32
+		HANDLE handle = thread.native_handle();
+		DWORD_PTR mask = static_cast<DWORD_PTR>(1) << core_id;
+		SetThreadAffinityMask(handle, mask);
+	#endif
 }
 
 void Camera::updateThread(int i, int n)
@@ -360,7 +362,7 @@ pair<vector<Camera*>::iterator, vector<Camera*>::iterator> Camera::fire(vector<R
 		Object2D* obj = rayCast.object;
 		Camera* camObj = dynamic_cast<Camera*>(obj); // if(obj->type() == ObjectType::player){...}
 		if (camObj) {
-			double damage = camObj->weapon.getDamage() / max((double)(rayCast.distance / camObj->d_depth * 30), (double)1);
+			double damage = camObj->weapon.getDamage() / max(static_cast<double>((rayCast.distance / camObj->d_depth * 30)), static_cast<double>(1));
 
 			Point2D move_vect = vect * damage;
 				
@@ -479,7 +481,7 @@ void Camera::setFieldOfView(double angle)
 
 	/*for (int i = 0; i < DISTANCES_SEGMENTS; i++)
 	{
-		double halfWidth = tan(d_fieldOfView / 2) * ((double)SCREEN_WIDTH / SCREEN_HEIGHT);
+		double halfWidth = tan(d_fieldOfView / 2) * (static_cast<double>(SCREEN_WIDTH / SCREEN_HEIGHT);
 		double offset = ((i * 2.0 / (DISTANCES_SEGMENTS - 1.0)) - 1.0) * halfWidth;
 		Point2D dir = { 1, 1 * offset };
 		dir = dir.normalize();
@@ -511,7 +513,7 @@ void Camera::shift_col(Point2D vector)
 		Point2D normal = { -edgeVector.y, edgeVector.x };
 		normal.normalize();
 
-		Point2D toWallVector = c.edge.first + c.edge.second - p_pos * 2;
+		Point2D toWallVector = c.edge.first + c.edge.second - p_pos * 2; //c.edge.first + (c.edge.second - c.edge.first) / 2. - p_pos; //;
 		if (normal * toWallVector > 0)
 			normal = normal * -1;
 
@@ -631,9 +633,9 @@ void Camera::updateDistances(int from, int to)
 		}
 
 		curFrame.distances[i] = v_rayCastStructure;
-		//cout << i << " " << (int)(i * COLLISION_SEGMENTS / DISTANCES_SEGMENTS) << endl;
+		//cout << i << " " << static_cast<int>(i * COLLISION_SEGMENTS / DISTANCES_SEGMENTS) << endl;
 		if(COLLISION_SEGMENTS > 0)
-			curFrame.collisions[(int)(i * COLLISION_SEGMENTS / DISTANCES_SEGMENTS)] = *coll;
+			curFrame.collisions[static_cast<int>(i * COLLISION_SEGMENTS / DISTANCES_SEGMENTS)] = *coll;
 
 		// clean
 		delete coll;
@@ -828,18 +830,18 @@ void Camera::rayDraw(sf::RenderTarget& window, std::vector<RayCastStructure>& v_
 }
 
 sf::Vector2f Camera::scaling(const sf::Vector2u& size_before, const sf::Vector2u& size_after) {
-	return sf::Vector2f((float)size_after.x / size_before.x, (float)size_after.y / size_before.y);
+	return sf::Vector2f(static_cast<float>(size_after.x) / size_before.x, static_cast<float>(size_after.y) / size_before.y);
 }
 
 sf::Vector2f Camera::scaling(const sf::IntRect& size_before, const sf::Vector2u& size_after) {
-	return sf::Vector2f((float)size_after.x / size_before.width, (float)size_after.y / size_before.height);
+	return sf::Vector2f(static_cast<float>(size_after.x) / size_before.width, static_cast<float>(size_after.y) / size_before.height);
 }
 
 void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure& k, int shift)
 {
 	if (k.object == nullptr || W_world.getObject2DName(k.object) == "") { return; }
 	// general
-	float height = static_cast<float>((DIST * SCALE / max(k.distance, (double)1)) * k.height);
+	float height = static_cast<float>((DIST * SCALE / max(k.distance, static_cast<double>(1))) * k.height);
 
 	float h1;
 	if (k.height <= 1) {
@@ -850,9 +852,9 @@ void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure& k, in
 	}
 
 	int c = static_cast<int>(std::min(static_cast<int>(255 * (1 - k.distance / d_depth)), static_cast<int>(255)));
-	int col_c = (int)((int)(c / FOG_SEGMENTS) * FOG_SEGMENTS / max((double)FOG_INTENSITY, 0.00001));
+	int col_c = static_cast<int>(static_cast<int>(c / FOG_SEGMENTS) * FOG_SEGMENTS / max(static_cast<double>(FOG_INTENSITY), 0.00001));
 	if (k.object->isMirror() && c >= 210) {
-		col_c = (int)((int)(210 / FOG_SEGMENTS) * FOG_SEGMENTS / max((double)FOG_INTENSITY, 0.00001));
+		col_c = static_cast<int>(static_cast<int>(210 / FOG_SEGMENTS) * FOG_SEGMENTS / max(static_cast<double>(FOG_INTENSITY), 0.00001));
 	}
 
 	// without textures
@@ -862,13 +864,13 @@ void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure& k, in
 
 	pol.setPoint(0, sf::Vector2f(0, h1));
 	pol.setPoint(1, sf::Vector2f(0, h1 + height));
-	pol.setPoint(2, sf::Vector2f((float)MONITOR_TILE, h1 + height));
-	pol.setPoint(3, sf::Vector2f((float)MONITOR_TILE, h1));
+	pol.setPoint(2, sf::Vector2f(static_cast<float>(MONITOR_TILE), h1 + height));
+	pol.setPoint(3, sf::Vector2f(static_cast<float>(MONITOR_TILE), h1));
 
-	pol.setPosition(static_cast<float>(shift * MONITOR_TILE), (float)(d_verticalShift));
+	pol.setPosition(static_cast<float>(shift * MONITOR_TILE), static_cast<float>(d_verticalShift));
 
 	if (b_textured) {
-		pol.setFillColor({ 255, 255, 255, static_cast<sf::Uint8>(max((int)(255 - col_c), 0))});
+		pol.setFillColor({ 255, 255, 255, static_cast<sf::Uint8>(max(static_cast<int>(255 - col_c), 0))});
 	}
 	else {
 		pol.setFillColor({ 255, 174, 174, static_cast<sf::Uint8>(255 - c)});
@@ -891,7 +893,7 @@ void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure& k, in
 			if (texture.getTexture()->getSize() != sf::Vector2u(0, 0)) {
 				if(!k.object->isMirror()) {
 					texture.setColor(sf::Color(c, c, c)); //texture.setColor(Point4D(sf::Color(c, c, c)).avarage(pol.getFillColor()).to_col());
-					texture.setTextureRect(sf::IntRect(static_cast<int>(texture.getTexture()->getSize().x * k.progress), 0, MONITOR_TILE, (int)(texture.getTexture()->getSize().y * ((k.object->type() == ObjectType::player) ? 1. : k.height))));
+					texture.setTextureRect(sf::IntRect(static_cast<int>(texture.getTexture()->getSize().x * k.progress), 0, MONITOR_TILE, static_cast<int>(texture.getTexture()->getSize().y * ((k.object->type() == ObjectType::player) ? 1. : k.height))));
 
 					sf::Vector2f ratio = scaling(texture.getTextureRect(), sf::Vector2u(static_cast<unsigned int>(MONITOR_TILE), static_cast<unsigned int>(height)));
 					texture.setScale(ratio);
@@ -901,7 +903,7 @@ void Camera::drawVerticalStrip(sf::RenderTarget& window, RayCastStructure& k, in
 						y = (SCREEN_HEIGHT / (h1 + d_verticalShift) * d_eyesHeight);
 					}*/
 
-					texture.setPosition({ pol.getPosition().x, (float)(h1 + d_verticalShift) }); // SCREEN_HEIGHT*5-d_eyesHeight*100 - (h1 + d_verticalShift) / d_eyesHeight)
+					texture.setPosition({ pol.getPosition().x, static_cast<float>(h1 + d_verticalShift) }); // SCREEN_HEIGHT*5-d_eyesHeight*100 - (h1 + d_verticalShift) / d_eyesHeight)
 
 					unique_lock<mutex> lk(renderM);
 					window.draw(texture);
@@ -970,7 +972,7 @@ void Camera::draw_map(sf::RenderTarget& window)
 	fov.setOutlineColor(FILED_OF_VEW_OUTLINE_COLOR);
 	fov.setFillColor(FILED_OF_VEW_COLOR);
 	fov.setOutlineThickness(OUTLINE_CAMERA_THICKNESS);
-	fov.setPosition(sf::Vector2f((float)(x() / MAP_SCALE), (float)(y() / MAP_SCALE)));
+	fov.setPosition(sf::Vector2f(static_cast<float>(x() / MAP_SCALE), static_cast<float>(y() / MAP_SCALE)));
 
 	player.setRadius(static_cast<float>(SCALE / MAP_SCALE));
 	player.setOrigin(sf::Vector2f(player.getRadius(), player.getRadius()));
@@ -978,7 +980,7 @@ void Camera::draw_map(sf::RenderTarget& window)
 	player.setOutlineColor(OUTLINE_CAMERA_COLOR);
 	player.setOutlineThickness(OUTLINE_CAMERA_THICKNESS);
 	player.setPointCount(CIRCLE_CONVEX_NUMBER);
-	player.setPosition(sf::Vector2f((float)(x() / MAP_SCALE), (float)(y() / MAP_SCALE)));
+	player.setPosition(sf::Vector2f(static_cast<float>(x() / MAP_SCALE), static_cast<float>(y() / MAP_SCALE)));
 
 	window.draw(fov);
 	window.draw(player);
@@ -990,7 +992,7 @@ void Camera::drawCameraView(sf::RenderTarget& window, int dt, pair<sf::Font, sf:
 	if (b_textured) {
 		sf::Sprite sky;
 		sky.setTexture(W_world.skyTexture());
-		sky.setTextureRect(sf::IntRect((int)(oldFrame.direction * SCREEN_WIDTH / 2), (int)(sky.getTextureRect().height - (SCREEN_HEIGHT / 2) - 540 + (int)d_verticalShift), SCREEN_WIDTH, SCREEN_HEIGHT));
+		sky.setTextureRect(sf::IntRect(static_cast<int>(oldFrame.direction * SCREEN_WIDTH / 2), static_cast<int>(sky.getTextureRect().height - (SCREEN_HEIGHT / 2) - 540 + static_cast<int>(d_verticalShift)), SCREEN_WIDTH, SCREEN_HEIGHT));
 		sky.setPosition(sf::Vector2f(0, 0));
 
 		unique_lock<mutex> lk(renderM);
@@ -1055,7 +1057,7 @@ void Camera::drawCameraView(sf::RenderTarget& window, int dt, pair<sf::Font, sf:
 	rect.setPosition((Point2D(rect.getPosition()) + 5).to_sff());
 
 	Point2D rect_size = Point2D(rect.getSize()) - 10;
-	rect.setSize(Vector2f(float(rect_size.x * ratio), (float)rect_size.y));
+	rect.setSize(Vector2f(float(rect_size.x * ratio), static_cast<float>(rect_size.y)));
 	rect.setFillColor(hp.getFillColor());
 
 	window.draw(rect);

@@ -6,22 +6,22 @@ namespace Settings {
 	int HEIGHT = sf::VideoMode::getDesktopMode().height; // 720
 	int FPS = 60;
 
-	int SCREEN_WIDTH = std::max(800, (int)WIDTH); //((WIDTH < 800) ? 800 : WIDTH) // 1280
-	int SCREEN_HEIGHT = std::max(600, (int)HEIGHT); //((HEIGHT < 600) ? 600 : HEIGHT) // 720
+	int SCREEN_WIDTH = std::max(800, static_cast<int>(WIDTH)); //((WIDTH < 800) ? 800 : WIDTH) // 1280
+	int SCREEN_HEIGHT = std::max(600, static_cast<int>(HEIGHT)); //((HEIGHT < 600) ? 600 : HEIGHT) // 720
 	int SCREEN_SIDE = int((SCREEN_WIDTH + SCREEN_HEIGHT) / 2); // 720
 
 	int DISTANCES_SEGMENTS = SCREEN_WIDTH;
 	double DIST = DISTANCES_SEGMENTS / (tan(FOV / 2) * 2) * 8 * SCREEN_WIDTH / SCREEN_HEIGHT;
-	int MONITOR_TILE = int((float)SCREEN_WIDTH / DISTANCES_SEGMENTS);
+	int MONITOR_TILE = int(static_cast<float>(SCREEN_WIDTH) / DISTANCES_SEGMENTS);
 	int CONVEX_NUMBER = int(DISTANCES_SEGMENTS / 10.f);
 
 	void updateSettings() {
-		SCREEN_WIDTH = std::max(800, (int)WIDTH); //((WIDTH < 800) ? 800 : WIDTH) // 1280
-		SCREEN_HEIGHT = std::max(600, (int)HEIGHT); //((HEIGHT < 600) ? 600 : HEIGHT) // 720
+		SCREEN_WIDTH = std::max(800, static_cast<int>(WIDTH)); //((WIDTH < 800) ? 800 : WIDTH) // 1280
+		SCREEN_HEIGHT = std::max(600, static_cast<int>(HEIGHT)); //((HEIGHT < 600) ? 600 : HEIGHT) // 720
 		SCREEN_SIDE = int((SCREEN_WIDTH + SCREEN_HEIGHT) / 2); // 720
 
 		DIST = DISTANCES_SEGMENTS / (tan(FOV / 2) * 2) * 7 * SCREEN_WIDTH / SCREEN_HEIGHT * SCREEN_WIDTH / DISTANCES_SEGMENTS;
-		MONITOR_TILE = int((float)SCREEN_WIDTH / DISTANCES_SEGMENTS);
+		MONITOR_TILE = int(static_cast<float>(SCREEN_WIDTH) / DISTANCES_SEGMENTS);
 		CONVEX_NUMBER = int(DISTANCES_SEGMENTS / 10.f);
 	}
 

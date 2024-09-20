@@ -14,7 +14,10 @@
 #include <fstream>
 #include <chrono>
 #include <cfenv>
-#include <windows.h>
+
+#ifdef _WIN32
+	#include <windows.h>
+#endif
 
 namespace Settings {
 	const double PI = 3.1415926535897932384626433832795;
@@ -32,7 +35,7 @@ namespace Settings {
 
 	const int SCALE_WINDOW = 50;
 
-	const float SIDE = (float)SCALE_WINDOW * SCALE;
+	const float SIDE = static_cast<float>(SCALE_WINDOW) * SCALE;
 
 	// SCREEN SIZE
 	extern int WIDTH; //sf::VideoMode::getDesktopMode().width; // 1280
@@ -76,9 +79,9 @@ namespace Settings {
 	// FOR COLLISION DETECTION
 	const int COLLISION_DISTANCE = 80;
 	const int COLLISION_AREA = 400;
-	const int COLLISION_SEGMENTS = 30; //(int)(std::max((DISTANCES_SEGMENTS / 50.), 1.));
-	const int HIDDEN_SEGMENTS = (int)(COLLISION_SEGMENTS * (2 * PI - FOV) / (2 * PI));
-	const int SHOWN_SEGMENTS = COLLISION_SEGMENTS - (int)(COLLISION_SEGMENTS * (2 * PI - FOV) / (2 * PI));
+	const int COLLISION_SEGMENTS = 30; //static_cast<int>(std::max((DISTANCES_SEGMENTS / 50.), 1.));
+	const int HIDDEN_SEGMENTS = static_cast<int>(COLLISION_SEGMENTS * (2 * PI - FOV) / (2 * PI));
+	const int SHOWN_SEGMENTS = COLLISION_SEGMENTS - static_cast<int>(COLLISION_SEGMENTS * (2 * PI - FOV) / (2 * PI));
 
 	const int OPTICAL_HEIGHT = 100;
 

@@ -18,7 +18,6 @@
 #include <atomic>
 #include <mutex>
 #include <thread>
-#include <Windows.h>
 
 using namespace std;
 using namespace sf;

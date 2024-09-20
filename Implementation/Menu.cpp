@@ -9,7 +9,7 @@ Menu::Menu(Font& font, Text::Style style, unsigned char size) : f(font), size(si
 	localIp = IpAddress::getLocalAddress();
 	globalIp = IpAddress::None;
 
-	text_width = (int)(Text("Settings", font, size).getLocalBounds().width);
+	text_width = static_cast<int>(Text("Settings", font, size).getLocalBounds().width);
 	left = SCREEN_WIDTH / 2 - text_width / 2 - text_width / 7;
 
 	interval = (SCREEN_HEIGHT - size * 2 * Tabs::Main) / Tabs::Main;
@@ -56,7 +56,7 @@ void Menu::draw(RenderTarget& sc)
 			int j = i - 1;
 
 			int box_width = text_width + text_width / 7 * 2;
-			int box_top = j * size * 2 + (int)((j + 0.5f) * interval);
+			int box_top = j * size * 2 + static_cast<int>((j + 0.5f) * interval);
 			IntRect button(Rect<int>(left, box_top, box_width, size * 2));
 
 			Text text("", f, size);
@@ -78,7 +78,7 @@ void Menu::draw(RenderTarget& sc)
 				break;
 			}
 
-			int width = (int)text.getGlobalBounds().width;
+			int width = static_cast<int>(text.getGlobalBounds().width);
 			text.setPosition(left + (box_width - width) / 2.f, box_top + size / 2.5f);
 
 			if (button.contains(mouse) && was_released) {
@@ -109,12 +109,12 @@ void Menu::draw(RenderTarget& sc)
 	if (tab < 4 && tab > 1) {
 		Text text("<<< Back (Escape)", f, size / 3);
 
-		Vector2f text_pos = { (float)int(SCREEN_WIDTH / 256.f), (float)int(SCREEN_HEIGHT / 216.f) };
+		Vector2f text_pos = { static_cast<float>(int(SCREEN_WIDTH / 256.f)), static_cast<float>(int(SCREEN_HEIGHT / 216.f)) };
 
 		text.setPosition(text_pos);
 		text.setOutlineThickness(-1);
 
-		IntRect rect(Rect<int>((int)text_pos.x, (int)text_pos.y, (int)text.getGlobalBounds().width, (int)text.getCharacterSize()));
+		IntRect rect(Rect<int>(static_cast<int>(text_pos.x), static_cast<int>(text_pos.y), static_cast<int>(text.getGlobalBounds().width), static_cast<int>(text.getCharacterSize())));
 
 		if (rect.contains(mouse)) {
 			text.setFillColor({0, 255, 255});
@@ -178,7 +178,7 @@ string Menu::rot(const std::string& str, unsigned char& count) {
 }
 
 string Menu::strip(const string& a) {
-	int index = 0, index0 = (int)a.length();
+	int index = 0, index0 = static_cast<int>(a.length());
 	for (int i = 0; i < a.length(); i++) {
 		if (a[i] == ' ') {
 			index++;
@@ -194,12 +194,12 @@ string Menu::strip(const string& a) {
 
 void Menu::draw_settings(RenderTarget& sc)
 {
-	unsigned char t_size = (int)(size * 1.5f);
+	unsigned char t_size = static_cast<int>(size * 1.5f);
 
 	for (int i = 0; i < settingTabs.size(); i++) {
-		int x = (int)((i < 4) ? SCREEN_WIDTH * 0.02f : SCREEN_WIDTH * 6.f / 10);
+		int x = static_cast<int>((i < 4) ? SCREEN_WIDTH * 0.02f : SCREEN_WIDTH * 6.f / 10);
 
-		Vector2f pos = { (float)x, (x > SCREEN_WIDTH / 2) ? (SCREEN_HEIGHT / 4) * (i - 3.7f) : SCREEN_HEIGHT / 5 * (i + 0.5f) };
+		Vector2f pos = { static_cast<float>(x), (x > SCREEN_WIDTH / 2) ? (SCREEN_HEIGHT / 4) * (i - 3.7f) : SCREEN_HEIGHT / 5 * (i + 0.5f)};
 
 		Text t(settingTabs[i].first, f, t_size);
 		t.setStyle(style);
@@ -224,8 +224,8 @@ void Menu::draw_settings(RenderTarget& sc)
 			string l_res = "Your Local IP: " + localIp.toString();
 			string g_res = "Your Global IP: " + globalIp.toString();
 
-			Text l_ip(l_res, f, (unsigned int)(t_size * settingTabs[i].first.length() / l_res.length()));
-			Text g_ip(g_res, f, (unsigned int)(t_size * settingTabs[i].first.length() / g_res.length()));
+			Text l_ip(l_res, f, static_cast<unsigned int>(t_size * settingTabs[i].first.length() / l_res.length()));
+			Text g_ip(g_res, f, static_cast<unsigned int>(t_size * settingTabs[i].first.length() / g_res.length()));
 			l_ip.setPosition(ip_pos.x + SCREEN_WIDTH / 320.f, ip_pos.y);
 			l_ip.setFillColor({ 0, 0, 0 });
 			g_ip.setFillColor({ 0, 0, 0 });
@@ -245,7 +245,7 @@ void Menu::draw_settings(RenderTarget& sc)
 			sc.draw(frame_ip);
 
 			frame_ip.setPosition(ip_pos.x, ip_pos.y + frame_ip.getLocalBounds().height + g_ip.getCharacterSize() * .08f + SCREEN_HEIGHT / 160.f);
-			frame_ip.setSize(Vector2f(bounds_g_ip.x + SCREEN_WIDTH / 160.f, bounds_g_ip.y + g_ip.getCharacterSize() * .33f));
+			frame_ip.setSize(Vector2f(bounds_g_ip.x + SCREEN_WIDTH / 160.f, bounds_g_ip.y + g_ip.getCharacterSize() * .4f));
 			g_ip.setPosition(frame_ip.getPosition().x + SCREEN_WIDTH / 320.f, frame_ip.getPosition().y);
 
 			if (globalIp != IpAddress::None) {
@@ -261,7 +261,7 @@ void Menu::draw_settings(RenderTarget& sc)
 			value.setPosition(value_pos.x + SCREEN_WIDTH / 160.f, value_pos.y - SCREEN_HEIGHT / 160.f);
 
 			Vector2f slider_pos = { value_pos.x, value_pos.y + t_size / 2.f + SCREEN_HEIGHT / 40.f };
-			draw_slider(sc, slider_pos, (int)frame_size.x, (int)(frame_size.y / 2.f));
+			draw_slider(sc, slider_pos, static_cast<int>(frame_size.x), static_cast<int>(frame_size.y / 2.f));
 
 			RectangleShape value_rect(Vector2f(value.getGlobalBounds().getSize().x + SCREEN_WIDTH / 80.f, value.getGlobalBounds().getSize().y + SCREEN_HEIGHT / 50.f));
 			value_rect.setFillColor({ 0, 0, 0 });
@@ -271,7 +271,7 @@ void Menu::draw_settings(RenderTarget& sc)
 			sc.draw(value);
 		}
 		else if(settingTabs[i].first != "Online" || NETWORK) {
-			draw_switcher(sc, { frame_pos.x + frame_size.x + SCREEN_WIDTH / 30.f, frame_pos.y }, SCREEN_WIDTH / 10, (int)frame_size.y, i);
+			draw_switcher(sc, { frame_pos.x + frame_size.x + SCREEN_WIDTH / 30.f, frame_pos.y }, SCREEN_WIDTH / 10, static_cast<int>(frame_size.y), i);
 		}
 
 		sc.draw(t);
@@ -281,7 +281,7 @@ void Menu::draw_settings(RenderTarget& sc)
 
 void Menu::draw_about(RenderTarget& sc) const
 {
-	int text_size = (int)(size / 2);
+	int text_size = static_cast<int>(size / 2);
 
 	std::string text = "A Simple Ray-Cast Algorithm can build Pseudo-3D Image!\nThis is an Implementaion of Pseudo 3D Game Engine\nEnjoy!!!\n\nConnect.txt\nLine 1: Ip Address of the server; Line 2: Port\nServer creates if ip(line 1) is a localhost(127.0.0.1)!!!";
 
@@ -289,7 +289,7 @@ void Menu::draw_about(RenderTarget& sc) const
 
 	Text temp("Pseudo-3D Game", f, text_size * 2);
 
-	temp.setPosition((float)(int)((SCREEN_WIDTH - temp.getGlobalBounds().width) / 2.f), 0 * (float)text_size + 20);
+	temp.setPosition(static_cast<float>(static_cast<int>((SCREEN_WIDTH - temp.getGlobalBounds().width) / 2.f)), 0 * static_cast<float>(text_size) + 20);
 	temp.setStyle(style);
 	temp.setFillColor({ 0, 0, 0 });
 
@@ -324,7 +324,7 @@ void Menu::draw_about(RenderTarget& sc) const
 
 		Sprite obj(texture);
 
-		float ratio = (float)height / texture_size.y;
+		float ratio = static_cast<float>(height) / texture_size.y;
 		obj.setScale({ ratio, ratio });
 
 		RectangleShape frame(Vector2f(obj.getGlobalBounds().getSize().x, obj.getGlobalBounds().getSize().y - 1.f));
@@ -340,14 +340,14 @@ void Menu::draw_about(RenderTarget& sc) const
 		sc.draw(frame);
 	}
 
-	text_size = (int)((SCREEN_HEIGHT - height * 1.5f) / lines.size() / 2.f);
+	text_size = static_cast<int>((SCREEN_HEIGHT - height * 1.5f) / lines.size() / 2.f);
 
 	for (int i = 0; i < lines.size(); i++) {
 		Text t(lines[i], f, text_size);
 		t.setStyle(style);
 		t.setFillColor({ 0, 0, 0 });
 
-		t.setPosition((float)(int)((SCREEN_WIDTH - t.getGlobalBounds().width) / 2.f), i * text_size * 2.f + height * 1.5f);
+		t.setPosition(static_cast<float>(static_cast<int>((SCREEN_WIDTH - t.getGlobalBounds().width) / 2.f)), i * text_size * 2.f + height * 1.5f);
 
 		sc.draw(t);
 	}
@@ -357,20 +357,20 @@ void Menu::draw_about(RenderTarget& sc) const
 
 void Menu::draw_slider(RenderTarget& sc, const Vector2f& pos, int width, int height)
 {
-	RectangleShape rect(Vector2f((float)width, (float)height));
+	RectangleShape rect(Vector2f(static_cast<float>(width), static_cast<float>(height)));
 	rect.setFillColor(Color::Transparent);
 	rect.setOutlineThickness(1);
 	rect.setOutlineColor({ 0, 0, 0 });
 
 	rect.setPosition(pos);
 
-	IntRect hitbox(Rect<int>((int)pos.x, (int)pos.y, width, height));
+	IntRect hitbox(Rect<int>(static_cast<int>(pos.x), static_cast<int>(pos.y), width, height));
 	if (hitbox.contains(mouse) && Mouse::isButtonPressed(Mouse::Left) && was_released) {
-		sensivity = (mouse.x - pos.x) / (double)width * maxSensivity;
+		sensivity = (mouse.x - pos.x) / static_cast<double>(width) * maxSensivity;
 	}
 
-	Vector2f circle_pos = { (float)(pos.x + width * sensivity / maxSensivity), pos.y + height / 2.f };
-	RectangleShape line(Vector2f((float)width, 2.f));
+	Vector2f circle_pos = { static_cast<float>(pos.x + width * sensivity / maxSensivity), pos.y + height / 2.f };
+	RectangleShape line(Vector2f(static_cast<float>(width), 2.f));
 	line.setPosition(pos.x, pos.y + height / 2.f);
 	line.setFillColor({ 0, 100, 180 });
 
@@ -388,16 +388,16 @@ void Menu::draw_switcher(RenderTarget& sc, const Vector2f& pos, int width, int h
 {
 	bool& val = settingTabs[i].second;
 
-	RectangleShape rect(Vector2f((float)width, (float)height));
+	RectangleShape rect(Vector2f(static_cast<float>(width), static_cast<float>(height)));
 	rect.setFillColor(Color::Transparent);
 	rect.setOutlineThickness(1);
 	rect.setOutlineColor({ 0, 0, 0 });
 
 	rect.setPosition(pos);
 
-	RectangleShape switcher(Vector2f(width / 2.f, (float)height));
+	RectangleShape switcher(Vector2f(width / 2.f, static_cast<float>(height)));
 	Text t((val) ? "ON" : "OFF", f, size / 3);
-	//t.rotate((float)PI / 2.f);
+	//t.rotate(static_cast<float>(PI / 2.f);
 	t.setFillColor({ 0, 0, 0 });
 
 	if (val) {
@@ -413,7 +413,7 @@ void Menu::draw_switcher(RenderTarget& sc, const Vector2f& pos, int width, int h
 		t.setPosition(pos.x + width - t.getGlobalBounds().getSize().x - size * 0.1f, pos.y); // t.setPosition(pos.x + width / 2.f + size * .125f, pos.y);
 	}
 
-	if (IntRect(Rect<int>((int)switcher.getGlobalBounds().left, (int)switcher.getGlobalBounds().top, (int)switcher.getGlobalBounds().width, (int)switcher.getGlobalBounds().height)).contains(mouse) && Mouse::isButtonPressed(Mouse::Left) && was_released) {
+	if (IntRect(Rect<int>(static_cast<int>(switcher.getGlobalBounds().left), static_cast<int>(switcher.getGlobalBounds().top), static_cast<int>(switcher.getGlobalBounds().width), static_cast<int>(switcher.getGlobalBounds().height))).contains(mouse) && Mouse::isButtonPressed(Mouse::Left) && was_released) {
 		val = !val;
 	}
 

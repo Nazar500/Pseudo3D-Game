@@ -19,7 +19,7 @@ namespace Sockets {
 	}
 	string fstring(const string& str, vector<string> param) {
 		string res = "";
-		unsigned char count = 0, last_index = 0, param_size = (unsigned char)param.size();
+		unsigned char count = 0, last_index = 0, param_size = static_cast<unsigned char>(param.size());
 
 		for (int i = 0; i < str.length() - 1; i++) {
 			if (str[i] == '{' && str[i + 1] == '}') {

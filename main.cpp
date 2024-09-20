@@ -22,10 +22,10 @@ string format_value(const double& value, const char& fill, const size_t& precisi
 void draw_load(RenderWindow& sc, const Font& f, const Text::Style& style, const string& text) {
     sc.clear({ 255, 255, 255 });
 
-    Text t(text, f, (int)(SCREEN_SIDE / 8.f));
+    Text t(text, f, static_cast<int>(SCREEN_SIDE / 8.f));
     t.setFillColor({ 0, 0, 0 });
     t.setStyle(style);
-    t.setPosition((SCREEN_WIDTH - t.getLocalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f - t.getCharacterSize() / 2.f);
+    t.setPosition(static_cast<float>(int((SCREEN_WIDTH - t.getLocalBounds().width) / 2.f)), static_cast<float>(int(SCREEN_HEIGHT / 2.f - t.getCharacterSize() / 2.f)));
 
     sc.draw(t);
     sc.display();
@@ -60,7 +60,7 @@ void clean_m_file(const std::string& filename) {
     ofstream out(filename);
 
     out << IpAddress::LocalHost << "\n";
-    out << 54000 << "\n";
+    out << 60000 << "\n";
 }
 
 void InitNet(unique_ptr<ServerUdp>& server, unique_ptr<ClientUdp>& client, World& world, shared_ptr<Camera>& camera, bool& isServer, int safe_counter = 0) {
@@ -109,6 +109,7 @@ void InitNet(unique_ptr<ServerUdp>& server, unique_ptr<ClientUdp>& client, World
 
 int main()
 {
+#ifdef _WIN32
     HWND hWnd = GetConsoleWindow();
     #ifdef _DEBUG
         ShowWindow(hWnd, 1);
@@ -120,6 +121,7 @@ int main()
             ShowWindow(hWnd, 1);
         }
     #endif
+#endif
 
     srand((unsigned int)time(0));
 
@@ -159,7 +161,7 @@ int main()
 
     // Menu Init
     draw_load(window, font, text_style, "Intializing...");
-    Menu menu(font, text_style, (unsigned char)(SCREEN_SIDE / 20.f));
+    Menu menu(font, text_style, static_cast<unsigned char>(SCREEN_SIDE / 20.f));
 
     // World Init
     World world;
@@ -240,7 +242,7 @@ int main()
 
         //// Title update
         //if (d_elapsedTime > 0) {
-        //    title += format_value((double)1 / d_elapsedTime, '0', 3, 3) + "fps.";
+        //    title += format_value(static_cast<double>(1 / d_elapsedTime, '0', 3, 3) + "fps.";
         //}
         //if (camera)
         //    title += " x:" + std::to_string(camera->x()) + ", y:" + std::to_string(camera->y()) + ", health: " + std::to_string(camera->health()) + ", kills: " + std::to_string(camera->getKills()) + ", deaths: " + std::to_string(camera->getDeaths());
@@ -311,7 +313,7 @@ int main()
             }
             else {
                 //test->startFrameProcessing();
-                //test->drawCameraView(window, (int)(d_elapsedTime * 1000));
+                //test->drawCameraView(window, static_cast<int>(d_elapsedTime * 1000));
                 //test->endFrameProcessing();
 
                 if (DEBUG)
@@ -325,7 +327,7 @@ int main()
 
                 if (DEBUG)
                     cout << "Started Drawing" << " ";
-                camera->drawCameraView(window, (int)(d_elapsedTime * 1000), menu.getFont());
+                camera->drawCameraView(window, static_cast<int>(d_elapsedTime * 1000), menu.getFont());
                 if (DEBUG)
                     cout << "Ended Drawing" << endl;
 

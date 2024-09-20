@@ -144,7 +144,7 @@ void Weapon::draw(sf::RenderTarget& window)
 	// configure
 	sf::Vector2f scale = trunk.getScale();
 	sf::FloatRect trunk_bounds = trunk.getLocalBounds();
-	trunk.setPosition((float)(SCREEN_WIDTH - trunk_bounds.width * scale.x + ((anim_recoil) ? shoot_recoil : roll_trunk)), (float)(SCREEN_HEIGHT - trunk_bounds.height * scale.y + ((anim_recoil) ? shoot_recoil : roll_trunk)));
+	trunk.setPosition(static_cast<float>(SCREEN_WIDTH - trunk_bounds.width * scale.x + ((anim_recoil) ? shoot_recoil : roll_trunk)), static_cast<float>(SCREEN_HEIGHT - trunk_bounds.height * scale.y + ((anim_recoil) ? shoot_recoil : roll_trunk)));
 
 	Point2D trunk_pos = trunk.getPosition();
 	Point2D arm_pos = { (trunk_pos.x + offset.x * scale.x), (trunk_pos.y + offset.y * scale.y) };

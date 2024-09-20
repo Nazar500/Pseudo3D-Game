@@ -46,11 +46,11 @@ double Point2D::vect2Rad()
 }
 
 sf::Vector2f Point2D::to_sff() const {
-    return sf::Vector2f((float)this->x, (float)this->y);
+    return sf::Vector2f(static_cast<float>(this->x), static_cast<float>(this->y));
 }
 
 sf::Vector2i Point2D::to_sfi() const {
-    return sf::Vector2i((int)this->x, (int)this->y);
+    return sf::Vector2i(static_cast<int>(this->x), static_cast<int>(this->y));
 }
 
 bool Point2D::operator==(const Point2D& a) const
@@ -136,12 +136,12 @@ double Point2D::norm_length()
 
 Point2D Point2D::normalize()
 {  
-    return *this /= std::max(length(), (double)1);
+    return *this /= std::max(length(), static_cast<double>(1));
 }
 
 Point2D Point2D::normalized()
 {
-    return *this / std::max(length(), (double)1);
+    return *this / std::max(length(), static_cast<double>(1));
 }
 
 
